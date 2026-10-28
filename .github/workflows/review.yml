@@ -95,7 +95,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Review and post a comment
-        uses: jihadkhawaja/BusinessHarness@fb1e9db0486590883d0cb7c5c9c1d06826ea4927
+        uses: jihadkhawaja/BusinessHarness@db514b7978368fead87ef4059e6cbd4fccdfb3d5
         with:
           base: ${{ steps.request.outputs.base }}
           head: ${{ steps.request.outputs.head }}
