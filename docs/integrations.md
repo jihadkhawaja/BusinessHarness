@@ -2,7 +2,47 @@
 
 The CLI contract is identical across vendors. A completed review returns 0/1; integration errors return 2–10. Always retain the report directory even on failure. No organization/repository IDs, hosted image names, model IDs or tokens have been invented for you; replace the marked placeholders before deploying.
 
-## Publish once
+## NuGet.org releases
+
+The public package ID is `BusinessHarness`; its executable is `businessharness`.
+Install an exact version with `dotnet tool install --global BusinessHarness --version 0.1.0`.
+The package includes the personal non-commercial license, third-party notices and
+MAGICore's Apache 2.0 license. Public distribution does not grant commercial rights.
+
+[publish-nuget.yml](../.github/workflows/publish-nuget.yml) runs on a **published,
+stable GitHub Release**, starting with `v0.1.0`. Pushing a tag alone does not publish
+a package. The tag must be `vMAJOR.MINOR.PATCH`, match `Directory.Build.props` and
+point to a commit on `main`. The workflow performs the full verification and offline
+smoke checks, then installs and runs the packaged tool before uploading an immutable
+workflow artifact. A separate job with no source checkout exchanges GitHub OIDC for
+a short-lived NuGet credential and pushes that artifact. The package is attached to
+the GitHub Release after successful publication. PRs do not run this workflow.
+
+Maintainer setup:
+
+1. Create the GitHub environment `nuget`, restricted to version tags `v*` (tag
+   rules, not branch rules). Set its variable `NUGET_USER` to `jihadkhawaja`, the
+   NuGet.org username that creates the policy. Use required reviewers if the
+   repository's plan supports them. Protect workflow changes, release creation
+   and version tags so only trusted maintainers can publish.
+2. On NuGet.org, sign in as that user and create a **Trusted Publishing** policy:
+   repository owner `jihadkhawaja`, repository `BusinessHarness`, workflow file
+   `publish-nuget.yml` (filename only), environment `nuget`. Select the intended
+   package owner. Where scopes are offered, allow new packages and new versions
+   only for the exact package pattern `BusinessHarness`. No stored API key is needed.
+3. Merge the release changes into `main`, create tag `v0.1.0` on the verified release
+   commit, and publish its GitHub Release. Observe the `Publish NuGet` workflow and
+   verify the package on NuGet.org; the public index and download badges can lag.
+
+New policies for private repositories can require activation within seven days.
+See [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
+The GitHub repository can remain private while the NuGet package is public;
+repository links and the GitHub build badge may require repository access.
+Publication intentionally fails if the package version already exists. If a push
+succeeded before a later step failed, inspect NuGet.org before rerunning; never
+replace a released version or move its tag. Use a new version for package changes.
+
+## Local packaging and containers
 
 From a trusted release checkout:
 
@@ -15,7 +55,7 @@ dotnet pack src/BusinessHarness.Cli -c Release --no-build -o artifacts/packages
 docker build --pull -t YOUR_REGISTRY/businessharness:0.1.0 .
 ```
 
-Publish the `.nupkg` to your approved NuGet feed or push the image to your registry using a separate trusted release process. Pin consumers to an exact package version, action commit, or image digest. Publishing credentials do not belong in review jobs. The GitHub action fetches its trusted action revision and initializes the pinned submodule outside the reviewed checkout before building; the caller does not have to install .NET manually. Container consumers need no .NET installation.
+Use the release workflow above to publish to NuGet.org, or push the image to your registry using a separate trusted release process. Pin consumers to an exact package version, action commit, or image digest. Publishing credentials do not belong in review jobs. The GitHub action fetches its trusted action revision and initializes the pinned submodule outside the reviewed checkout before building; the caller does not have to install .NET manually. Container consumers need no .NET installation.
 
 Example Linux container invocation after building the local image:
 

@@ -1,5 +1,12 @@
 # BusinessHarness
 
+[![Build and security checks](https://github.com/jihadkhawaja/BusinessHarness/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jihadkhawaja/BusinessHarness/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/BusinessHarness.svg)](https://www.nuget.org/packages/BusinessHarness)
+[![NuGet total downloads](https://img.shields.io/nuget/dt/BusinessHarness.svg)](https://www.nuget.org/packages/BusinessHarness)
+[![Security policy](https://img.shields.io/badge/security-policy-blue)](SECURITY.md)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![License](https://img.shields.io/badge/license-personal%20non--commercial-blue)](LICENSE)
+
 A .NET 10 / C# pipeline automation runner for repository reviews, dynamic reference validation and optional PR/MR feedback. Run the same CLI in **GitHub Actions, GitLab CI, Azure DevOps, or Bitbucket Pipelines**.
 
 Implemented:
@@ -12,7 +19,14 @@ Implemented:
 - JSON, escaped Markdown, and SARIF 2.1.0 reports; actionable errors and stable exit codes.
 - A packable .NET tool, a non-root container, a GitHub composite action, and four CI examples.
 
-This is a working initial implementation, **not yet published** to NuGet, a container registry, or an action marketplace. API integrations have contract tests; live authentication requires your credentials.
+The .NET tool package is **BusinessHarness** on [NuGet.org](https://www.nuget.org/packages/BusinessHarness), starting with version **0.1.0**. NuGet publication runs when a stable GitHub Release is published; see [release setup](docs/integrations.md#nugetorg-releases). Containers and the action marketplace require separate publishing. API integrations have contract tests; live authentication requires your credentials. GitHub build status and repository links may require access while this repository is private.
+
+```powershell
+dotnet tool install --global BusinessHarness --version 0.1.0
+businessharness --help
+```
+
+Requires .NET 10 and Git. Personal non-commercial use is free; commercial and organizational use requires a paid license. See [LICENSE](LICENSE).
 
 ## Build and run
 
@@ -80,7 +94,7 @@ Package locally without publishing:
 
 ```powershell
 dotnet pack src/BusinessHarness.Cli -c Release -o artifacts/packages
-dotnet tool install BusinessHarness.Tool --tool-path artifacts/tools --configfile examples/NuGet.Local.Config --version 0.1.0
+dotnet tool install BusinessHarness --tool-path artifacts/tools --configfile examples/NuGet.Local.Config --version 0.1.0
 ./artifacts/tools/businessharness --help
 docker build --pull -t businessharness:0.1.0 .
 ```

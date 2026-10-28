@@ -1,0 +1,132 @@
+name: Publish NuGet
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuget-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  TESTINGPLATFORM_TELEMETRY_OPTOUT: '1'
+
+jobs:
+  verify:
+    if: github.repository == 'jihadkhawaja/BusinessHarness' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: recursive
+      - name: Validate release tag and ancestry
+        id: release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          if ($env:RELEASE_TAG -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') {
+              throw 'Release tag must be a stable version such as v0.1.0.'
+          }
+          $version = $env:RELEASE_TAG.Substring(1)
+          [xml]$props = Get-Content Directory.Build.props -Raw
+          if ($version -cne [string]$props.Project.PropertyGroup.Version) {
+              throw 'Release tag does not match Version in Directory.Build.props.'
+          }
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
+          if ($LASTEXITCODE -ne 0) { throw 'Release commit must belong to main.' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Verify build, tests, analyzers, audit and package
+        run: ./scripts/Verify.ps1
+      - name: Run offline CLI smoke checks
+        run: ./scripts/Smoke-Test.ps1
+      - name: Install and exercise the packaged tool
+        env:
+          PACKAGE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet tool install BusinessHarness --tool-path artifacts/release-tool --configfile examples/NuGet.Local.Config --version $env:PACKAGE_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged tool installation failed.' }
+          ./artifacts/release-tool/businessharness --version
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged tool execution failed.' }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nuget-package
+          path: artifacts/packages/BusinessHarness.${{ steps.release.outputs.version }}.nupkg
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: nuget-package
+          path: packages
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.403
+      - name: Check publishing configuration and artifact
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+          PACKAGE_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_USER)) { throw 'Set NUGET_USER to the NuGet.org username that created the publishing policy.' }
+          if (!(Test-Path -LiteralPath "packages/BusinessHarness.$env:PACKAGE_VERSION.nupkg")) { throw 'Expected package is missing.' }
+      - name: Authenticate to NuGet.org with OIDC
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish BusinessHarness
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+          PACKAGE_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          dotnet nuget push "packages/BusinessHarness.$env:PACKAGE_VERSION.nupkg" --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+          if ($LASTEXITCODE -ne 0) { throw 'NuGet.org publication failed.' }
+
+  release-assets:
+    needs: [verify, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: nuget-package
+          path: packages
+      - name: Attach the published package to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PACKAGE_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          gh release upload $env:RELEASE_TAG "packages/BusinessHarness.$env:PACKAGE_VERSION.nupkg"
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed.' }
