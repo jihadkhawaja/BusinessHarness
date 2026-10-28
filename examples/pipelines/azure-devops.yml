@@ -2,6 +2,9 @@
 # Other repository types can use their native PR trigger. Keep YAML/templates trusted.
 # Define HarnessImage=image@sha256:digest and HarnessModel; store OpenAiApiKey as a secret.
 trigger: none
+pr:
+  branches:
+    include: ['*']
 pool:
   vmImage: ubuntu-latest
 steps:
@@ -18,6 +21,7 @@ steps:
         -e OPENAI_API_KEY -e HARNESS_MODEL \
         "$HARNESS_IMAGE" review --repo /repo --base "$HARNESS_BASE" --head "$HARNESS_HEAD" --output /reports
     displayName: Review pull request
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     env:
       HARNESS_IMAGE: $(HarnessImage)
       HARNESS_MODEL: $(HarnessModel)

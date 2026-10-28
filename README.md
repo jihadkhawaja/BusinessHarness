@@ -34,6 +34,8 @@ dotnet run --project src/BusinessHarness.Cli -- scan --repo C:/code/my-project -
 
 Both commits and their merge base must exist locally. The runner compares **merge-base(base, head) → head**, ignoring uncommitted files. Fetch full history in CI before invoking the runner. On a new repository, make at least a baseline and change commit first.
 
+PR reviews cover the combined additions, modifications and deletions across **all commits in the PR**, relative to its target branch (`main`, `master`, or another branch). Both OpenAI and Claude receive only changed-file patches with three surrounding context lines, PR metadata and linked Jira/specification documents; unchanged repository files and target-only changes are outside the review. Jira/spec checks use this same diff evidence. Requirements that need unseen code or runtime verification remain `not_verifiable` and fail the gate.
+
 Configure API secrets in your shell or CI secret store, then review:
 
 ```powershell
@@ -75,6 +77,8 @@ businessharness memory-search --config C:/trusted/harness.policy.json --session 
 | Bitbucket | [Container pipeline](examples/pipelines/bitbucket.yml) |
 
 First publish the action repository or build and push the image to your registry. Replace the clearly marked action/image placeholders and pin the resulting commit/digest. Configure the CI system's secret and approval rules. The examples default to local reports and pipeline gates. Enable `feedback: comment` or `feedback: auto` with the required host permissions to publish feedback.
+
+This repository's [PR review workflow](.github/workflows/review.yml) schedules code and linked-specification review for every PR, including source updates and title/description edits. Configure the `ai-review` environment, model/provider variables and API secrets before enabling it; see [review setup](docs/integrations.md#this-repositorys-pr-review). Its review scope is independent of the full build/test checks in `ci.yml`.
 
 Package locally without publishing:
 

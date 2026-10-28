@@ -1,0 +1,75 @@
+name: PR code and specification review
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: businessharness-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  review:
+    name: PR code and Jira specifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Store API secrets here and configure required reviewers before enabling this workflow.
+    environment: ai-review
+    steps:
+      # Only trusted base-branch code is built. PR content is read as Git data below.
+      - name: Check out trusted harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: trusted-harness
+          submodules: recursive
+          persist-credentials: false
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.403
+      - name: Build trusted harness
+        working-directory: trusted-harness
+        shell: bash
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+        run: |
+          set -euo pipefail
+          dotnet restore src/BusinessHarness.Cli/BusinessHarness.Cli.csproj --locked-mode --configfile NuGet.Config
+          dotnet publish src/BusinessHarness.Cli/BusinessHarness.Cli.csproj -c Release --no-restore --output "$RUNNER_TEMP/businessharness-bin"
+      - name: Check out PR source for diff data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: reviewed
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+      - name: Review PR changes and linked specifications
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        env:
+          HARNESS_BASE: ${{ github.event.pull_request.base.sha }}
+          HARNESS_HEAD: ${{ github.event.pull_request.head.sha }}
+          HARNESS_PROVIDER: ${{ vars.HARNESS_PROVIDER || 'openai' }}
+          HARNESS_MODEL: ${{ vars.HARNESS_MODEL }}
+          HARNESS_JIRA_SITE: ${{ vars.HARNESS_JIRA_SITE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          dotnet "$RUNNER_TEMP/businessharness-bin/BusinessHarness.Cli.dll" review \
+            --repo "$GITHUB_WORKSPACE/reviewed" \
+            --base "$HARNESS_BASE" --head "$HARNESS_HEAD" \
+            --output "$RUNNER_TEMP/businessharness-results" --feedback none
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: businessharness-review-${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/businessharness-results
+          if-no-files-found: ignore
+          retention-days: 7

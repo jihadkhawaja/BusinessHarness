@@ -2,18 +2,20 @@
 # Replace YOUR_ORG/BusinessHarness@FULL_COMMIT_SHA with the published trusted action ref.
 name: BusinessHarness review
 on:
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+# This workflow runs from the trusted base. Never execute code from the PR checkout.
 permissions:
   contents: read
   pull-requests: read # Change to write when enabling feedback: comment or auto.
 jobs:
   review:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: ai-review # Configure required reviewers before exposing API secrets.
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Review
@@ -21,11 +23,15 @@ jobs:
         with:
           base: ${{ github.event.pull_request.base.sha }}
           head: ${{ github.event.pull_request.head.sha }}
-          provider: openai
+          provider: ${{ vars.HARNESS_PROVIDER || 'openai' }}
           model: ${{ vars.HARNESS_MODEL }}
           feedback: none # comment or auto requires pull-requests: write and repository approval settings.
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          HARNESS_JIRA_SITE: ${{ vars.HARNESS_JIRA_SITE }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

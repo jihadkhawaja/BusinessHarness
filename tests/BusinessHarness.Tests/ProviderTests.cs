@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using BusinessHarness.Application;
 using BusinessHarness.Core;
 using BusinessHarness.Infrastructure;
 using Xunit;
@@ -10,6 +11,71 @@ public sealed class ProviderTests
 {
     private static readonly ChangeSet Changes = new("base", "head", [new("sample.cs", "+// example", [1])], [], []);
     private const string Result = """{"summary":"No defects found.","findings":[],"requirements":[]}""";
+
+    [Theory]
+    [InlineData("openai")]
+    [InlineData("anthropic")]
+    public async Task ProvidersReceiveOnlyCompletePrDiffAndLinkedSpecification(string providerName)
+    {
+        using var repo = new TestRepository();
+        var original = Enumerable.Range(1, 30).Select(i => "// existing line " + i).ToArray();
+        repo.Commit("sample.cs", string.Join('\n', original) + "\n");
+        repo.Commit("unchanged.cs", "// unrelated repository content\n");
+        repo.Commit("removed.cs", "// obsolete behavior\n");
+        var baseline = repo.Git("rev-parse", "HEAD");
+        repo.Git("checkout", "-b", "feature");
+        repo.Commit("added.cs", "// first PR commit\n");
+        original[14] = "// modified behavior in second PR commit";
+        repo.Commit("sample.cs", string.Join('\n', original) + "\n");
+        repo.Git("rm", "--", "removed.cs");
+        repo.Git("commit", "-m", "remove obsolete behavior");
+        var head = repo.Git("rev-parse", "HEAD");
+        repo.Git("checkout", "main");
+        repo.Commit("target-only.cs", "// unrelated target branch change\n");
+        File.WriteAllText(Path.Combine(repo.Path, "sample.cs"), "// uncommitted working tree content\n");
+        File.WriteAllText(Path.Combine(repo.Path, "untracked.cs"), "// untracked content\n");
+        var changes = await repo.Reader().ReadChangesAsync("main", head, TestContext.Current.CancellationToken);
+        var specification = new ReferenceDocument("PROJ-1", "Feature specification", "Describe the new behavior", "Verify behavior at runtime");
+        const string response = """{"summary":"Runtime verification required.","findings":[],"requirements":[{"issueKey":"PROJ-1","status":"not_verifiable","evidence":"The supplied diff cannot establish runtime behavior."}]}""";
+        using var handler = new StubHttpHandler(async request =>
+        {
+            using var payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
+            var root = payload.RootElement;
+            Assert.Equal(ReviewContract.Instructions, root.GetProperty(providerName == "openai" ? "instructions" : "system").GetString());
+            var input = providerName == "openai" ? root.GetProperty("input").GetString()
+                : root.GetProperty("messages")[0].GetProperty("content").GetString();
+            using var context = JsonDocument.Parse(input!);
+            Assert.Equal(baseline, context.RootElement.GetProperty("baseCommit").GetString());
+            Assert.Equal(head, context.RootElement.GetProperty("headCommit").GetString());
+            var files = context.RootElement.GetProperty("files").EnumerateArray().ToArray();
+            Assert.Equal(["added.cs", "removed.cs", "sample.cs"], files.Select(f => f.GetProperty("path").GetString()).ToArray());
+            Assert.Contains("first PR commit", files[0].GetProperty("patch").GetString());
+            Assert.Contains("-// obsolete behavior", files[1].GetProperty("patch").GetString());
+            Assert.Empty(files[1].GetProperty("addedLines").EnumerateArray());
+            var patch = files[2].GetProperty("patch").GetString()!;
+            Assert.Contains("+// modified behavior in second PR commit", patch);
+            Assert.Contains(" // existing line 14", patch);
+            Assert.DoesNotContain("// existing line 1\n", patch);
+            Assert.Equal(15, Assert.Single(files[2].GetProperty("addedLines").EnumerateArray()).GetInt32());
+            Assert.DoesNotContain("uncommitted", input);
+            Assert.DoesNotContain("untracked", input);
+            Assert.DoesNotContain("unrelated", input);
+            var reference = Assert.Single(context.RootElement.GetProperty("references").EnumerateArray());
+            Assert.Equal(specification.Key, reference.GetProperty("key").GetString());
+            Assert.Equal(specification.AcceptanceCriteria, reference.GetProperty("acceptanceCriteria").GetString());
+            return StubHttpHandler.Json(providerName == "openai"
+                ? JsonSerializer.Serialize(new { status = "completed", output = new[] { new { type = "message", content = new[] { new { type = "output_text", text = response } } } } })
+                : JsonSerializer.Serialize(new { stop_reason = "end_turn", content = new[] { new { type = "text", text = response } } }));
+        });
+        using var client = new HttpClient(handler);
+        var policy = new HarnessPolicy { Provider = providerName, Model = "test-model" };
+        IReviewProvider provider = providerName == "openai"
+            ? new OpenAiReviewProvider(new(client), policy, "test-key")
+            : new AnthropicReviewProvider(new(client), policy, "test-key");
+        var result = await provider.ReviewAsync(changes, [specification], TestContext.Current.CancellationToken);
+        Assert.Equal("not_verifiable", Assert.Single(result.Requirements).Status);
+        Assert.Equal(1, handler.Calls);
+    }
 
     [Fact]
     public async Task OpenAiSendsStrictSchemaWithoutToolsAndDoesNotStore()

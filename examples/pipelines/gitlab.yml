@@ -9,14 +9,13 @@ businessharness:
     GIT_DEPTH: '0'
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_PROJECT_ID == $CI_PROJECT_ID'
-      when: manual
   allow_failure: false
   script:
     - >-
       dotnet /app/BusinessHarness.Cli.dll review
       --repo "$CI_PROJECT_DIR"
       --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"
-      --head "$CI_COMMIT_SHA"
+      --head "${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA:-$CI_COMMIT_SHA}"
       --output "$CI_PROJECT_DIR/harness-results"
   artifacts:
     when: always
