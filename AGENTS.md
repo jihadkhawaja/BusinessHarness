@@ -27,6 +27,42 @@ of HTTP/Git implementations and MAGICore. Adapt the upstream build through the
 existing root MSBuild files; update the submodule only for an explicit dependency
 change. Preserve licensing and third-party notices.
 
+## Website and GitHub Pages
+
+The public landing page is [https://businessharness.net/](https://businessharness.net/).
+Its source lives in the standalone orphan branch `codex/website` in this same
+repository. Application code and documentation remain on `main`. Do not merge
+these unrelated branch histories or put application source in the published site.
+
+- Run `git branch --show-current` and `git worktree list` before editing. Reuse
+  an existing website worktree when available; do not switch a checkout that has
+  unrelated changes. Read the website branch's `AGENTS.md` and `README.md` for
+  site-specific instructions.
+- Website files live at that branch's root: `index.html`, `styles.css`, `site.js`,
+  `favicon.svg`, `robots.txt`, `sitemap.xml`, `CNAME`, and `.nojekyll`. The site is
+  buildless HTML/CSS/JavaScript with no package dependencies or backend.
+- GitHub Pages publishes `/` from `codex/website` using its managed branch
+  deployment (`build_type: legacy`). Pushing to that branch deploys publicly;
+  do not assume website edits are drafts once pushed. No custom workflow or
+  .NET build is needed. Treat every file on the website branch as public.
+- Preserve `CNAME` containing only `businessharness.net` and the `.nojekyll` file.
+  Keep the canonical URL and sitemap on HTTPS. Pages must retain HTTPS
+  enforcement, a valid certificate for the apex and `www`, and redirects from
+  HTTP and `www` to `https://businessharness.net/`.
+- Cloudflare uses DNS-only records: four apex A records (`185.199.108.153` through
+  `185.199.111.153`), four apex AAAA records (`2606:50c0:8000::153` through
+  `2606:50c0:8003::153`), and `www` CNAME to `jihadkhawaja.github.io`. Ordinary
+  website edits need no DNS changes, Cloudflare token, or Cloudflare Tunnel.
+- Keep product claims, command examples, availability, and licensing aligned
+  with `main`'s `README.md`, `SECURITY.md`, and `LICENSE`. Demo review output must
+  remain clearly illustrative. Repository links may require access while the
+  repository is private.
+- For website-only changes, check JavaScript syntax, local links and assets,
+  desktop/mobile layouts, keyboard navigation, demo tabs, clipboard behavior,
+  and FAQ controls. A full .NET verification run is unnecessary. After an
+  authorized deployment, verify Pages completion, HTTPS with normal certificate
+  validation, and actual HTTP/`www` redirects; settings alone are insufficient.
+
 ## Implementation conventions
 
 - Use the SDK selected by `global.json` (currently 10.0.403 with `latestPatch`) and
