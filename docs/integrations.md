@@ -83,3 +83,57 @@ Reports are always written locally; optional `comment` or `auto` feedback publis
 ## Persistent memory and follow-up events
 
 Enable trusted `memory` settings and provide a persistent writable directory separate from the reviewed checkout and reports. Ephemeral runners and containers need an explicitly provisioned memory volume; a temporary workspace does not provide long-term storage. See [memory setup](memory.md), the [memory policy example](../examples/harness.memory.policy.json), and the [GitHub comment workflow](../examples/pipelines/github-follow-up.yml). Authenticated Jira/GitLab webhook receivers can invoke `follow-up --event PATH`, followed by a normal review, or `review --event PATH` for immediate re-review. Repository and actor routing remain controlled by trusted policy. No webhook endpoint is registered automatically.
+
+## Test reviews in this repository
+
+The repository's [review workflow](../.github/workflows/review.yml) accepts a
+Conversation comment on an open PR from `jihadkhawaja` containing:
+
+```text
+@businessharness please review this PR and check the error handling.
+```
+
+`@businessharness` is a configured text trigger, not a registered GitHub account.
+GitHub Actions runs the harness and posts the review as `github-actions[bot]`.
+This workflow supports Conversation comments, including edits; inline diff
+comments and submitted review bodies do not trigger it. Each accepted event can
+publish another review. Comments from other accounts and comments on issues are
+skipped. The CLI also checks the complete mention and actor against the
+[trusted policy](../.github/businessharness.policy.json).
+
+The workflow must first be merged into `main`. In the `ai-review` GitHub
+environment, configure secret `OPENAI_API_KEY` and variable `HARNESS_MODEL` with
+an API model supporting native structured outputs. Keep the environment restricted
+to `main`; its API credentials must not be available to PR branch workflows.
+Protect changes to workflow and policy files through maintainer review. To permit
+another caller, update both the workflow's actor checks and the policy allowlist.
+No separate bot account, GitHub App, self-hosted runner, or approval permission is
+required for comment feedback.
+
+For a manual test, choose **Actions → BusinessHarness review → Run workflow**,
+select `main`, and enter an open PR number. Alternatively:
+
+```powershell
+gh workflow run review.yml --repo jihadkhawaja/BusinessHarness --ref main -f pr_number=123
+```
+
+Replace `123` with the actual PR number. Manual runs are restricted to the same
+maintainer account. Both paths use fresh GitHub-hosted runners, a pinned trusted
+harness revision, and policy from the workflow's `main` commit. PR commits are
+fetched as Git objects for comparison; their files are never checked out or
+executed. The provider receives the bounded review context and the selected
+comment. Feedback uses `comment`, so this workflow does not approve PRs or request
+changes automatically. Fork PRs can be reviewed when explicitly requested by the
+allowed maintainer; fork authors cannot invoke the secret-bearing job themselves.
+
+The workflow enables session memory in the runner's temporary directory to ingest
+the triggering comment. That memory is discarded after the job, so later comments
+do not recall earlier runs. For durable history, provision isolated persistent
+storage and follow the [persistent follow-up example](../examples/pipelines/github-follow-up.yml).
+
+Check the workflow log for `Follow-up remembered with source and actor provenance.`
+on accepted mentions and `Pull/merge request feedback published.` on a completed
+publication. Reports are uploaded for seven days even when the review gate fails.
+A gate failure can publish findings and still fail the job; configuration, API,
+stale PR metadata, or response-validation failures can prevent publication. Report
+artifacts contain review context and should be handled accordingly.

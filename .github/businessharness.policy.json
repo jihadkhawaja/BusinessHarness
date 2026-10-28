@@ -1,0 +1,13 @@
+{
+  "memory": {
+    "enabled": true,
+    "scope": "session",
+    "readScopes": ["session"],
+    "namespace": "businessharness-github-review",
+    "repositoryId": "github:github.com/jihadkhawaja/businessharness",
+    "captureReviews": false,
+    "acceptFollowUps": true,
+    "agentMentions": ["@businessharness"],
+    "allowedActors": ["jihadkhawaja"]
+  }
+}

@@ -1,0 +1,107 @@
+name: BusinessHarness review
+
+on:
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open PR number to review
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: businessharness-review-${{ github.event.issue.number || inputs.pr_number }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: >-
+      github.repository == 'jihadkhawaja/BusinessHarness' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'jihadkhawaja' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.issue.pull_request &&
+        github.event.comment.user.login == 'jihadkhawaja' &&
+        contains(github.event.comment.body, '@businessharness')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ai-review
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # The policy and working directory come from main. PR objects are fetched
+      # only for diff inspection; no PR files, hooks or build scripts are run.
+      - name: Check out trusted workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve current pull request
+        id: request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo 'Supply a positive PR number.' >&2
+            exit 2
+          fi
+          request="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")"
+          if ! jq -e --arg repo "$GH_REPO" '.state == "open" and .base.repo.full_name == $repo' <<< "$request" > /dev/null; then
+            echo 'The PR must be open and target this repository.' >&2
+            exit 2
+          fi
+          base="$(jq -r '.base.sha' <<< "$request")"
+          head="$(jq -r '.head.sha' <<< "$request")"
+          if [[ ! "$base" =~ ^[0-9a-f]{40}$ || ! "$head" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'GitHub did not return valid commit IDs.' >&2
+            exit 2
+          fi
+          git -c core.hooksPath=/dev/null fetch --no-tags origin "$base" "$head"
+          printf 'base=%s\nhead=%s\nchange=https://github.com/%s/pull/%s\n' "$base" "$head" "$GH_REPO" "$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Check review configuration
+        shell: bash
+        env:
+          HARNESS_MODEL: ${{ vars.HARNESS_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HARNESS_MODEL" || -z "$OPENAI_API_KEY" ]]; then
+            echo 'Set HARNESS_MODEL and OPENAI_API_KEY in the ai-review environment.' >&2
+            exit 2
+          fi
+
+      - name: Review and post a comment
+        uses: jihadkhawaja/BusinessHarness@93b634317f38fdb6503573a474feb97584f17c30
+        with:
+          base: ${{ steps.request.outputs.base }}
+          head: ${{ steps.request.outputs.head }}
+          change: ${{ steps.request.outputs.change }}
+          provider: openai
+          model: ${{ vars.HARNESS_MODEL }}
+          config: ${{ github.workspace }}/.github/businessharness.policy.json
+          memory-directory: ${{ runner.temp }}/businessharness-memory
+          event: ${{ github.event_name == 'issue_comment' && github.event_path || '' }}
+          feedback: comment
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Upload review reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: businessharness-review-${{ github.event.issue.number || inputs.pr_number }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/businessharness-results
+          if-no-files-found: ignore
+          retention-days: 7
