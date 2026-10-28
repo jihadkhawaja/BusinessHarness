@@ -1,5 +1,6 @@
 # Azure Repos: configure a build-validation branch policy for this pipeline.
-# Other repository types can use their native PR trigger. Keep YAML/templates trusted.
+# The YAML pr trigger below is for GitHub/Bitbucket Cloud; Azure Repos ignores it.
+# Keep YAML/templates trusted. Azure Repos requires the branch policy above.
 # Define HarnessImage=image@sha256:digest and HarnessModel; store OpenAiApiKey as a secret.
 trigger: none
 pr:

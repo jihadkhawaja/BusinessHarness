@@ -16,6 +16,8 @@ Before enabling this workflow, configure the `ai-review` environment with requir
 
 Missing credentials/model configuration fail the job rather than silently skipping review. Environment approval can hold a scheduled job until a maintainer authorizes secret access. Reports are retained for seven days. This workflow does not replace the solution-wide build/test checks in [ci.yml](../.github/workflows/ci.yml).
 
+Required environment reviewers depend on the repository's GitHub plan. If unavailable, restrict the environment to explicitly trusted target branches, keep workflow/harness/policy code controlled by the base branch, and review privileged workflow changes before merging. A temporary test branch must contain only reviewed, trusted runner code; remove its environment allowance when testing finishes.
+
 The [`pull_request_target` event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target) runs in the base-branch context. Reports record the reviewed source SHA, but this workflow does not publish a separate status on that SHA. Add a trusted source-status publisher before using this review as a required PR-head merge check.
 
 ## Publish once
