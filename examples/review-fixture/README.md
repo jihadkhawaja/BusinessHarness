@@ -7,5 +7,9 @@ defects. Keep this PR as a draft; these fixtures are not intended for merging.
 The discount calculator accepts a nonnegative subtotal and an integer percentage
 between 0 and 100. Applying a 20 percent discount to 100 must return 80.
 
+The pagination calculator accepts a nonnegative item count and a positive page
+size. Eleven items with a page size of ten must require two pages; one item with
+a page size of ten must require one page. An empty collection requires zero pages.
+
 Review the aggregate diff across every commit and report concrete defects against
 the added code lines. The fixture has no external tickets or live dependencies.
