@@ -105,7 +105,7 @@ The host target/base determines the diff when a request is connected. `--head` m
 | `--feedback` | GitHub | GitLab |
 | --- | --- | --- |
 | `none` (default) | Local reports only | Local reports only |
-| `comment` | Review with COMMENT | MR note |
+| `comment` | PR Conversation comment | MR note |
 | `auto`, gate passes | APPROVE with reviewed commit ID | MR note, then approve with reviewed SHA |
 | `auto`, gate fails | REQUEST_CHANGES with reviewed commit ID | Remove this bot's approval, then MR note; failed CI job supplies the blocking gate |
 
@@ -116,3 +116,12 @@ Publication is not transactional: GitLab note creation may succeed before approv
 ## Long-term memory
 
 The optional `memory` object configures durable MAGICore memory, global/repository/session scopes, retrieval limits, retention, and allowed agent mentions. Global defaults can come from `HARNESS_MEMORY_CONFIG`; explicit repository memory settings replace them, and invocation settings can override scope/session. See [memory setup](memory.md) for the full contract, follow-up payloads, container persistence and examples.
+
+## Review presentation
+
+Findings include a category: `security`, `maintainability`, or `correctness`.
+Provider schemas require it; older serialized findings without the additive
+property default to `correctness`. Unknown categories fail validation. Local
+credential and sensitive-path findings are categorized as `security`. JSON and
+SARIF preserve the category; Markdown uses the fixed [review template](github-app.md#review-template).
+Every finding retains its exact added-line anchor and existing severity gate.

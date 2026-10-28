@@ -43,7 +43,8 @@ public sealed partial class GitRepository(string directory, HarnessPolicy policy
             {
                 excluded.Add(path);
                 findings.Add(new("BH002", "high", path, 1, "Sensitive or excluded file changed",
-                    "Content was withheld by filename policy. Inspect this change privately before merging."));
+                    "Content was withheld by filename policy. Inspect this change privately before merging.")
+                { Category = "security" });
                 continue;
             }
             var patch = await RunAsync(["diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--no-color", "--unified=3", mergeBase, headCommit, "--", ":(literal)" + path], policy.MaxFileDiffBytes, cancellationToken);
@@ -65,7 +66,8 @@ public sealed partial class GitRepository(string directory, HarnessPolicy policy
                 {
                     added.Add(line);
                     if (redactor.ContainsSecret(text)) findings.Add(new("BH001", "critical", path, line,
-                        "Possible embedded secret", "An added line contains a credential-like value. Remove it and rotate any real credential."));
+                        "Possible embedded secret", "An added line contains a credential-like value. Remove it and rotate any real credential.")
+                    { Category = "security" });
                     line++;
                 }
                 else if (!text.StartsWith('-')) line++;

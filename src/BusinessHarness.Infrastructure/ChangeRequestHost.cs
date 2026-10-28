@@ -11,6 +11,7 @@ public sealed class ChangeRequestHost : IChangeRequestHost
     private readonly string token;
     private readonly SecretRedactor redactor;
     private readonly Uri endpoint;
+    private readonly Uri? conversationComments;
 
     public ChangeRequestHost(SafeHttp http, ChangeRequestPolicy policy, string token, SecretRedactor redactor)
     {
@@ -24,6 +25,9 @@ public sealed class ChangeRequestHost : IChangeRequestHost
             ? "repos/" + string.Join('/', policy.Project.Split('/').Select(Uri.EscapeDataString)) + "/pulls/" + policy.Number
             : "projects/" + Uri.EscapeDataString(policy.Project) + "/merge_requests/" + policy.Number;
         endpoint = new Uri(new Uri(apiBase), path);
+        if (policy.Platform == "github")
+            conversationComments = new Uri(new Uri(apiBase), "repos/" +
+                string.Join('/', policy.Project.Split('/').Select(Uri.EscapeDataString)) + "/issues/" + policy.Number + "/comments");
     }
 
     public async Task<ChangeRequestContext> ReadAsync(CancellationToken cancellationToken)
@@ -67,7 +71,12 @@ public sealed class ChangeRequestHost : IChangeRequestHost
             throw new HarnessException(ErrorCode.LimitExceeded, "Review comment exceeds 60,000 characters.", "Use local reports or reduce review scope; comments are never silently truncated.");
         if (policy.Platform == "github")
         {
-            await PostAsync("reviews", new { commit_id = report.HeadCommit, body = markdown, @event = approve ? "APPROVE" : reject ? "REQUEST_CHANGES" : "COMMENT" }, cancellationToken);
+            if (feedback == "comment")
+            {
+                await PostToAsync(conversationComments!, new { body = markdown }, cancellationToken);
+            }
+            else
+                await PostAsync("reviews", new { commit_id = report.HeadCommit, body = markdown, @event = approve ? "APPROVE" : reject ? "REQUEST_CHANGES" : "COMMENT" }, cancellationToken);
         }
         else
         {
@@ -79,8 +88,11 @@ public sealed class ChangeRequestHost : IChangeRequestHost
     }
 
     private async Task PostAsync(string suffix, object payload, CancellationToken ct)
+        => await PostToAsync(new Uri(endpoint.AbsoluteUri + "/" + suffix), payload, ct);
+
+    private async Task PostToAsync(Uri destination, object payload, CancellationToken ct)
     {
-        using var request = Request(HttpMethod.Post, new Uri(endpoint.AbsoluteUri + "/" + suffix));
+        using var request = Request(HttpMethod.Post, destination);
         request.Content = SafeHttp.JsonContent(payload);
         using var response = await http.SendAsync(request, "Change request feedback", ct);
     }

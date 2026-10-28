@@ -50,7 +50,10 @@ public static class Severity
         Array.IndexOf(Values, value) >= Array.IndexOf(Values, threshold);
 }
 
-public sealed record Finding(string RuleId, string Severity, string Path, int Line, string Title, string Description);
+public sealed record Finding(string RuleId, string Severity, string Path, int Line, string Title, string Description)
+{
+    public string Category { get; init; } = "correctness";
+}
 public sealed record RequirementAssessment(string IssueKey, string Status, string Evidence);
 public sealed record ReviewResult(string Summary, List<Finding> Findings, List<RequirementAssessment> Requirements);
 public sealed record FilePatch(string Path, string Patch, HashSet<int> AddedLines);

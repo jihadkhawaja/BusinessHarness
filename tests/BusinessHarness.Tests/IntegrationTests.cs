@@ -119,10 +119,19 @@ public sealed class IntegrationTests
             Assert.Equal("Bearer", request.Headers.Authorization!.Scheme);
             if (request.Method == HttpMethod.Get) return Metadata("github", draft: draft);
             posts++;
-            Assert.Equal("https://api.github.com/repos/org/repo/pulls/12/reviews", request.RequestUri!.AbsoluteUri);
+            Assert.Equal(mode == "comment" ? "https://api.github.com/repos/org/repo/issues/12/comments" :
+                "https://api.github.com/repos/org/repo/pulls/12/reviews", request.RequestUri!.AbsoluteUri);
             using var payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(Ct));
-            Assert.Equal(Head, payload.RootElement.GetProperty("commit_id").GetString());
-            Assert.Equal(decision, payload.RootElement.GetProperty("event").GetString());
+            if (mode == "comment")
+            {
+                Assert.False(payload.RootElement.TryGetProperty("commit_id", out _));
+                Assert.False(payload.RootElement.TryGetProperty("event", out _));
+            }
+            else
+            {
+                Assert.Equal(Head, payload.RootElement.GetProperty("commit_id").GetString());
+                Assert.Equal(decision, payload.RootElement.GetProperty("event").GetString());
+            }
             var text = payload.RootElement.GetProperty("body").GetString();
             Assert.DoesNotContain("custom-secret-value", text);
             Assert.DoesNotContain("@everyone", text);
@@ -132,6 +141,40 @@ public sealed class IntegrationTests
         var host = Host(client, "github");
         await host.PublishAsync(await host.ReadAsync(Ct), Report(passed, excluded), mode, Ct);
         Assert.Equal(1, posts);
+    }
+
+    [Theory]
+    [InlineData("comment")]
+    [InlineData("auto")]
+    public async Task CommentPublicationFailureIsNeverRetried(string mode)
+    {
+        var posts = 0;
+        using var handler = new StubHttpHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get) return Task.FromResult(Metadata("github"));
+            posts++;
+            return Task.FromResult(StubHttpHandler.Json("{}", HttpStatusCode.Forbidden));
+        });
+        using var client = new HttpClient(handler);
+        var host = Host(client, "github");
+        var reviewed = await host.ReadAsync(Ct);
+        await Assert.ThrowsAsync<HarnessException>(() => host.PublishAsync(reviewed, Report(true), mode, Ct));
+        Assert.Equal(1, posts);
+    }
+
+    [Fact]
+    public async Task ConversationRoutingDoesNotRewriteProjectSegments()
+    {
+        using var handler = new StubHttpHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get) return Task.FromResult(Metadata("github"));
+            Assert.Equal("https://api.github.com/repos/pulls/pulls/issues/12/comments", request.RequestUri!.AbsoluteUri);
+            return Task.FromResult(StubHttpHandler.Json("{}"));
+        });
+        using var client = new HttpClient(handler);
+        var host = new ChangeRequestHost(new(client), new() { Project = "pulls/pulls", Number = 12 }, "host-token", new());
+        await host.PublishAsync(await host.ReadAsync(Ct), Report(true), "comment", Ct);
+        Assert.Equal(3, handler.Calls); // initial metadata, fresh metadata, one comment
     }
 
     [Theory]
@@ -153,6 +196,22 @@ public sealed class IntegrationTests
         var host = Host(client, "github");
         var original = await host.ReadAsync(Ct);
         await Assert.ThrowsAsync<HarnessException>(() => host.PublishAsync(original, Report(true), "auto", Ct));
+        Assert.Equal(2, handler.Calls);
+    }
+
+    [Fact]
+    public async Task ConversationCommentIsWithheldWhenHeadChanges()
+    {
+        var reads = 0;
+        using var handler = new StubHttpHandler(request =>
+        {
+            Assert.Equal(HttpMethod.Get, request.Method);
+            return Task.FromResult(Metadata("github", ++reads == 1 ? "" : "sha"));
+        });
+        using var client = new HttpClient(handler);
+        var host = Host(client, "github");
+        var reviewed = await host.ReadAsync(Ct);
+        await Assert.ThrowsAsync<HarnessException>(() => host.PublishAsync(reviewed, Report(true), "comment", Ct));
         Assert.Equal(2, handler.Calls);
     }
 

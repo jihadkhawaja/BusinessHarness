@@ -23,8 +23,10 @@ targeting `main` on open, reopen, source push, title/description edit, and readi
 for review. Its `pull_request_target` workflow builds only the trusted workflow
 revision from the base branch, then fetches PR commits as Git objects. It never
 checks out or executes PR files, hooks, scripts, tests, or submodules. Fresh
-GitHub-hosted runners use read-only GitHub permissions and `--feedback none`;
-reports are retained for seven days. Automatic runs do not post review comments.
+GitHub-hosted runners post `--feedback comment` results to the PR Conversation
+tab and retain reports for seven days. The host token has pull-requests write
+permission. Configure the [GitHub App](github-app.md) for the BusinessHarness bot
+identity; otherwise comments use github-actions[bot].
 The separate [mention workflow](../.github/workflows/review.yml) remains available
 for [maintainer-requested review comments](#test-reviews-in-this-repository).
 
@@ -139,7 +141,9 @@ Conversation comment on an open PR from `jihadkhawaja` containing:
 ```
 
 `@businessharness` is a configured text trigger, not a registered GitHub account.
-GitHub Actions runs the harness and posts the review as `github-actions[bot]`.
+GitHub Actions runs the harness and posts a regular PR Conversation comment.
+With the [GitHub App](github-app.md) configured, the author is
+`businessharness[bot]`; otherwise it is `github-actions[bot]`.
 This workflow supports Conversation comments, including edits; inline diff
 comments and submitted review bodies do not trigger it. Each accepted event can
 publish another review. Comments from other accounts and comments on issues are
@@ -167,7 +171,7 @@ maintainer account. Both paths use fresh GitHub-hosted runners, a pinned trusted
 harness revision, and policy from the workflow's `main` commit. PR commits are
 fetched as Git objects for comparison; their files are never checked out or
 executed. The provider receives the bounded review context and the selected
-comment. Feedback uses `comment`, so this workflow does not approve PRs or request
+comment. Feedback posts to the Conversation tab with `comment`, so this workflow does not approve PRs or request
 changes automatically. Fork PRs can be reviewed when explicitly requested by the
 allowed maintainer; fork authors cannot invoke the secret-bearing job themselves.
 

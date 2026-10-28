@@ -51,6 +51,16 @@ public sealed class ApplicationTests
         Assert.Throws<HarnessException>(() => ReviewValidation.Validate(new("Review", [], []), Changes, [new("PROJ-1", "Summary", "Text")]));
     }
 
+    [Theory]
+    [InlineData("style")]
+    [InlineData("<script>")]
+    [InlineData(null)]
+    public void RejectsUnsupportedFindingCategories(string? category)
+    {
+        var finding = new Finding("BUG", "high", "sample.cs", 2, "Bug", "Details") { Category = category! };
+        Assert.Throws<HarnessException>(() => ReviewValidation.Validate(new("Review", [finding], []), Changes, []));
+    }
+
     [Fact]
     public void ArchitectureDependenciesPointInwards()
     {

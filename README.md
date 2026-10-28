@@ -61,6 +61,10 @@ This repository has [automatic PR reviews](.github/workflows/pr-review.yml) and
 [automatic review setup](docs/integrations.md#this-repositorys-automatic-pr-review)
 and [mention testing](docs/integrations.md#test-reviews-in-this-repository).
 
+Use the [BusinessHarness GitHub App](docs/github-app.md) for a dedicated bot
+identity and concise findings in the PR Conversation tab, focused on security,
+maintainability, correctness, and available specifications.
+
 ## Learn more
 
 - [Configuration](docs/configuration.md) — providers, tickets, specs, and feedback.

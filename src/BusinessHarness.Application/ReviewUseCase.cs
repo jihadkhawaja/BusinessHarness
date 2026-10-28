@@ -73,7 +73,8 @@ public static class ReviewValidation
             throw Invalid();
         foreach (var finding in result.Findings)
         {
-            if (finding is null || !Severity.IsValid(finding.Severity) || finding.RuleId is null ||
+            if (finding is null || !Severity.IsValid(finding.Severity) ||
+                finding.Category is not ("security" or "maintainability" or "correctness") || finding.RuleId is null ||
                 finding.RuleId.Length is < 1 or > 64 || !finding.RuleId.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_') ||
                 finding.Title is null || finding.Title.Length is < 1 or > 200 ||
                 finding.Description is null || finding.Description.Length is < 1 or > 8000)
