@@ -83,7 +83,7 @@ jobs:
           fi
 
       - name: Review and post a comment
-        uses: jihadkhawaja/BusinessHarness@93b634317f38fdb6503573a474feb97584f17c30
+        uses: jihadkhawaja/BusinessHarness@fb1e9db0486590883d0cb7c5c9c1d06826ea4927
         with:
           base: ${{ steps.request.outputs.base }}
           head: ${{ steps.request.outputs.head }}
