@@ -4,7 +4,7 @@ name: BusinessHarness review
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, ready_for_review]
-# This workflow runs from the trusted base. Never execute code from the PR checkout.
+# This workflow runs from the trusted base. PR commits are fetched as Git data only.
 permissions:
   contents: read
   pull-requests: read # Change to write when enabling feedback: comment or auto.
@@ -13,11 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     environment: ai-review # Configure required reviewers before exposing API secrets.
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.workflow_sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Fetch PR commits without checking out PR files
+        shell: bash
+        env:
+          HARNESS_BASE: ${{ github.event.pull_request.base.sha }}
+          HARNESS_HEAD: ${{ github.event.pull_request.head.sha }}
+          HARNESS_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$HARNESS_BASE" =~ ^[0-9a-f]{40}$ || ! "$HARNESS_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'GitHub did not return valid commit IDs.' >&2
+            exit 2
+          fi
+          auth="$(printf 'x-access-token:%s' "$HARNESS_GITHUB_TOKEN" | base64 | tr -d '\r\n')"
+          echo "::add-mask::$auth"
+          GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth" \
+            git -c core.hooksPath=/dev/null fetch --no-tags origin "$HARNESS_BASE" "$HARNESS_HEAD"
       - name: Review
         uses: YOUR_ORG/BusinessHarness@FULL_COMMIT_SHA
         with:
@@ -34,7 +50,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       - name: Upload reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: businessharness-review
           path: ${{ runner.temp }}/businessharness-results

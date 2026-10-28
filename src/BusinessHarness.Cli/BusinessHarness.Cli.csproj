@@ -10,14 +10,19 @@
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>businessharness</ToolCommandName>
-    <PackageId>BusinessHarness.Tool</PackageId>
+    <PackageId>BusinessHarness</PackageId>
     <Description>AI repository review, dynamic references, scoped MAGICore memory and optional PR feedback.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://businessharness.net/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jihadkhawaja/BusinessHarness</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>code-review;ai;cli;security;automation</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../BusinessHarness.Application/BusinessHarness.Application.csproj" />
     <ProjectReference Include="../BusinessHarness.Infrastructure/BusinessHarness.Infrastructure.csproj" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />
     <None Include="../../external/MAGICore/LICENSE" Pack="true" PackagePath="licenses/MAGICore/" />
   </ItemGroup>
 </Project>

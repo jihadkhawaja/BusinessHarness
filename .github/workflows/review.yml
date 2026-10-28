@@ -1,75 +1,107 @@
-name: PR code and specification review
+name: BusinessHarness review
+
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open PR number to review
+        required: true
+        type: string
+
 permissions:
   contents: read
-  pull-requests: read
+
 concurrency:
-  group: businessharness-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: businessharness-review-${{ github.event.issue.number || inputs.pr_number }}
+  cancel-in-progress: false
+
 jobs:
   review:
-    name: PR code and Jira specifications
+    if: >-
+      github.repository == 'jihadkhawaja/BusinessHarness' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'jihadkhawaja' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.issue.pull_request &&
+        github.event.comment.user.login == 'jihadkhawaja' &&
+        contains(github.event.comment.body, '@businessharness')))
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Store API secrets here and configure required reviewers before enabling this workflow.
     environment: ai-review
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      # Only trusted base-branch code is built. PR content is read as Git data below.
-      - name: Check out trusted harness
+      # The policy and working directory come from main. PR objects are fetched
+      # only for diff inspection; no PR files, hooks or build scripts are run.
+      - name: Check out trusted workflow revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.workflow_sha }}
-          path: trusted-harness
-          submodules: recursive
-          persist-credentials: false
-      - name: Install .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: 10.0.403
-      - name: Build trusted harness
-        working-directory: trusted-harness
-        shell: bash
-        env:
-          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-        run: |
-          set -euo pipefail
-          dotnet restore src/BusinessHarness.Cli/BusinessHarness.Cli.csproj --locked-mode --configfile NuGet.Config
-          dotnet publish src/BusinessHarness.Cli/BusinessHarness.Cli.csproj -c Release --no-restore --output "$RUNNER_TEMP/businessharness-bin"
-      - name: Check out PR source for diff data
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: reviewed
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-          submodules: false
-      - name: Review PR changes and linked specifications
-        working-directory: ${{ runner.temp }}
+
+      - name: Resolve current pull request
+        id: request
         shell: bash
         env:
-          HARNESS_BASE: ${{ github.event.pull_request.base.sha }}
-          HARNESS_HEAD: ${{ github.event.pull_request.head.sha }}
-          HARNESS_PROVIDER: ${{ vars.HARNESS_PROVIDER || 'openai' }}
-          HARNESS_MODEL: ${{ vars.HARNESS_MODEL }}
-          HARNESS_JIRA_SITE: ${{ vars.HARNESS_JIRA_SITE }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
         run: |
           set -euo pipefail
-          dotnet "$RUNNER_TEMP/businessharness-bin/BusinessHarness.Cli.dll" review \
-            --repo "$GITHUB_WORKSPACE/reviewed" \
-            --base "$HARNESS_BASE" --head "$HARNESS_HEAD" \
-            --output "$RUNNER_TEMP/businessharness-results" --feedback none
-      - name: Upload reports
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo 'Supply a positive PR number.' >&2
+            exit 2
+          fi
+          request="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")"
+          if ! jq -e --arg repo "$GH_REPO" '.state == "open" and .base.repo.full_name == $repo' <<< "$request" > /dev/null; then
+            echo 'The PR must be open and target this repository.' >&2
+            exit 2
+          fi
+          base="$(jq -r '.base.sha' <<< "$request")"
+          head="$(jq -r '.head.sha' <<< "$request")"
+          if [[ ! "$base" =~ ^[0-9a-f]{40}$ || ! "$head" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'GitHub did not return valid commit IDs.' >&2
+            exit 2
+          fi
+          git -c core.hooksPath=/dev/null fetch --no-tags origin "$base" "$head"
+          printf 'base=%s\nhead=%s\nchange=https://github.com/%s/pull/%s\n' "$base" "$head" "$GH_REPO" "$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Check review configuration
+        shell: bash
+        env:
+          HARNESS_MODEL: ${{ vars.HARNESS_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HARNESS_MODEL" || -z "$OPENAI_API_KEY" ]]; then
+            echo 'Set HARNESS_MODEL and OPENAI_API_KEY in the ai-review environment.' >&2
+            exit 2
+          fi
+
+      - name: Review and post a comment
+        uses: jihadkhawaja/BusinessHarness@93b634317f38fdb6503573a474feb97584f17c30
+        with:
+          base: ${{ steps.request.outputs.base }}
+          head: ${{ steps.request.outputs.head }}
+          change: ${{ steps.request.outputs.change }}
+          provider: openai
+          model: ${{ vars.HARNESS_MODEL }}
+          config: ${{ github.workspace }}/.github/businessharness.policy.json
+          memory-directory: ${{ runner.temp }}/businessharness-memory
+          event: ${{ github.event_name == 'issue_comment' && github.event_path || '' }}
+          feedback: comment
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Upload review reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: businessharness-review-${{ github.event.pull_request.number }}
+          name: businessharness-review-${{ github.event.issue.number || inputs.pr_number }}-${{ github.run_id }}
           path: ${{ runner.temp }}/businessharness-results
           if-no-files-found: ignore
           retention-days: 7

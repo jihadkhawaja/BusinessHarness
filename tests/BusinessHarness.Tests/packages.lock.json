@@ -126,7 +126,7 @@
           "MagiCore": "[1.0.0, )"
         }
       },
-      "BusinessHarness.Tool": {
+      "BusinessHarness": {
         "type": "Project",
         "dependencies": {
           "BusinessHarness.Application": "[0.1.0, )",
