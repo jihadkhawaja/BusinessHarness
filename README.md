@@ -31,6 +31,48 @@ Review code changes, check them against tickets and specs, and catch potential i
 - **Optional feedback and memory** for PR/MR comments, approvals, and follow-up reviews.
 - **Reports you can use** in JSON, Markdown, and SARIF.
 
+## Storyboard: from change to review decision
+
+A diff shows what changed. A ticket explains what the change needs to achieve.
+BusinessHarness brings that evidence together so reviewers can spot gaps before
+merging and CI can enforce a configured review gate.
+
+**Illustrative story:** a team is adding a CSV export. Ticket `PROJ-123` requires
+timestamps to retain microsecond precision, but an added formatting line keeps
+only whole seconds. This example describes a possible review, not an actual run
+or a guarantee that the model will find every issue.
+
+| Scene | What happens | How it helps |
+| --- | --- | --- |
+| **1. Open the change** | A developer opens a PR/MR and includes `PROJ-123` in its title or description. The team has configured Jira and trusted review policy. | The review can consider the intended behavior alongside the code. |
+| **2. Prepare the evidence** | BusinessHarness resolves the commits, builds a bounded diff, withholds sensitive paths, redacts detected credentials, and fetches the ticket through configured routing. | The provider receives selected change context and requirements without access to the checkout or host write credentials. |
+| **3. Compare code with intent** | OpenAI or Claude reviews the supplied evidence and may flag the added timestamp formatting line for losing precision. | A requirement gap becomes a concrete finding anchored to an added line. |
+| **4. Validate and apply the gate** | BusinessHarness validates the response and finding locations, retains local security findings, and checks reference coverage against policy. | CI gets a failing result for findings at or above the configured severity threshold or failed requirement assessments. Missing, partial, or unverifiable assessments also fail the gate. |
+| **5. Fix and rerun** | The developer preserves timestamp precision and runs a new review of the updated commits. JSON, Markdown, and SARIF reports capture the result. | Reviewers get current evidence for their merge decision. Comments or eligible automatic approvals require explicitly enabled feedback and fresh host checks. |
+| **6. Carry context forward, if enabled** | Opt-in memory stores a compact validated outcome outside the reviewed checkout and recalls relevant history in later reviews. | Follow-up reviews can retain context; historical memory cannot prove current correctness or authorize approval. |
+
+```mermaid
+flowchart TD
+    Change["Committed change + PR/MR metadata"] --> Evidence["Bounded, redacted diff + configured references"]
+    Policy["Trusted policy + selected review skills"] --> Review
+    Evidence --> Review["OpenAI or Claude reviews supplied evidence"]
+    Review --> Validate["Validate output + preserve local findings"]
+    Validate --> Gate["Apply severity and requirement gate"]
+    Gate --> Reports["JSON / Markdown / SARIF + CI exit code"]
+    Reports --> Feedback["Optional host feedback after fresh checks"]
+    History["Optional scoped memory"] -.-> Review
+    Reports -.-> History
+```
+
+Choose **`scan`** for an offline credential-pattern check of added lines; it makes
+no provider, host, or reference calls and does not use memory. Choose **`review`**
+to compare the diff with configured ticket/spec evidence through a provider API.
+The model sees the diff and three lines of context, cannot read whole files or
+run tests, and may leave runtime requirements unverifiable. Keep human review,
+tests, and dedicated security checks in your workflow. See the
+[security model](SECURITY.md), [gate and feedback settings](docs/configuration.md),
+and [exit codes](docs/errors.md).
+
 ## Quick start
 
 Requires .NET 10 and Git.
