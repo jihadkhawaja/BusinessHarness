@@ -23,20 +23,22 @@ public sealed class IntegrationTests
         TokenEnvironment = "SPEC_TOKEN"
     };
 
-    [Fact]
-    public async Task DiscoversJiraAndCustomReferencesFromMetadataAndDeduplicatesExplicitOnes()
+    [Theory]
+    [InlineData("custom-secret-value")]
+    [InlineData("abc1234")]
+    public async Task DiscoversJiraAndCustomReferencesFromMetadataAndDeduplicatesExplicitOnes(string secret)
     {
         var jira = new JiraStub();
         using var handler = new StubHttpHandler(request =>
         {
             Assert.Equal("https://api.example.com/specs/ABC-2", request.RequestUri!.AbsoluteUri);
-            Assert.Equal("custom-secret-value", request.Headers.Authorization!.Parameter);
-            return Task.FromResult(StubHttpHandler.Json("""{"data":{"title":"Spec","content":"Requirement custom-secret-value"}}"""));
+            Assert.Equal(secret, request.Headers.Authorization!.Parameter);
+            return Task.FromResult(StubHttpHandler.Json(JsonSerializer.Serialize(new { data = new { title = "Spec", content = "Requirement " + secret } })));
         });
         using var client = new HttpClient(handler);
         var policy = new HarnessPolicy { JiraSite = "https://team.atlassian.net", ReferenceSources = [Source] };
         policy.Validate();
-        var resolver = new ReferenceResolver(new(client), policy, _ => "custom-secret-value", new(["custom-secret-value"]), jira);
+        var resolver = new ReferenceResolver(new(client), policy, _ => secret, new([secret]), jira);
         var documents = await resolver.ResolveAsync("PROJ-1: implement https://docs.example.com/specs/ABC-2\nPROJ-1 https://docs.example.com/specs/ABC-2", ["PROJ-1", "specs:ABC-2"], Ct);
         Assert.Equal(2, documents.Count);
         Assert.Equal(["PROJ-1"], jira.Keys);

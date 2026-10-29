@@ -147,6 +147,7 @@ maintainability, correctness, and available specifications.
 - [Memory](docs/memory.md) — opt-in review history and follow-ups.
 - [Errors and recovery](docs/errors.md) — exit codes and troubleshooting.
 - [Security](SECURITY.md) and [architecture](docs/architecture.md) — how reviews are bounded and protected.
+- [Security scanning](docs/security-scanning.md) — local checks and Veracode/SonarQube scan preparation.
 
 ## Contribute
 

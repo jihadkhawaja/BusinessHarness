@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisModeSecurity>All</AnalysisModeSecurity>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>

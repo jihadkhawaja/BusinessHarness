@@ -13,6 +13,46 @@ public sealed class ProviderTests
     private const string Result = """{"summary":"No defects found.","findings":[],"requirements":[]}""";
 
     [Theory]
+    [InlineData("openai", "DSA", false)]
+    [InlineData("openai", "DSA", true)]
+    [InlineData("openai", "ENCRYPTED", false)]
+    [InlineData("openai", "ENCRYPTED", true)]
+    [InlineData("anthropic", "DSA", false)]
+    [InlineData("anthropic", "DSA", true)]
+    [InlineData("anthropic", "ENCRYPTED", false)]
+    [InlineData("anthropic", "ENCRYPTED", true)]
+    public async Task PrivateKeyInOrdinaryFileIsFlaggedAndWithheldFromProvider(string providerName, string label, bool truncated)
+    {
+        using var repo = new TestRepository();
+        // Deliberately synthetic text; no real key material.
+        var key = $"-----BEGIN {label} PRIVATE KEY-----\nSYNTHETIC-PRIVATE-BODY\n" +
+            (truncated ? "" : $"-----END {label} PRIVATE KEY-----\n");
+        repo.Commit("notes.md", key);
+        var changes = await repo.Reader().ReadChangesAsync("HEAD^", "HEAD", TestContext.Current.CancellationToken);
+        var finding = Assert.Single(changes.SecurityFindings);
+        Assert.Equal("BH001", finding.RuleId);
+        Assert.Equal("critical", finding.Severity);
+        Assert.Equal(1, finding.Line);
+        Assert.DoesNotContain("SYNTHETIC-PRIVATE-BODY", Assert.Single(changes.Files).Patch);
+        using var handler = new StubHttpHandler(async request =>
+        {
+            var payload = await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            Assert.DoesNotContain("SYNTHETIC-PRIVATE-BODY", payload);
+            Assert.Contains("REDACTED PRIVATE KEY", payload);
+            return StubHttpHandler.Json(providerName == "openai"
+                ? JsonSerializer.Serialize(new { status = "completed", output = new[] { new { type = "message", content = new[] { new { type = "output_text", text = Result } } } } })
+                : JsonSerializer.Serialize(new { stop_reason = "end_turn", content = new[] { new { type = "text", text = Result } } }));
+        });
+        using var client = new HttpClient(handler);
+        var policy = new HarnessPolicy { Provider = providerName, Model = "test-model" };
+        IReviewProvider provider = providerName == "openai"
+            ? new OpenAiReviewProvider(new(client), policy, "test-key")
+            : new AnthropicReviewProvider(new(client), policy, "test-key");
+        await provider.ReviewAsync(changes, [], TestContext.Current.CancellationToken);
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Theory]
     [InlineData("openai")]
     [InlineData("anthropic")]
     public async Task ProvidersReceiveOnlyCompletePrDiffAndLinkedSpecification(string providerName)

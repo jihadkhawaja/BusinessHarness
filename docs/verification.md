@@ -1,5 +1,40 @@
 # Verification
 
+## Security checks: 2026-10-30
+
+Validated locally on Windows with .NET SDK 10.0.403 and PowerShell 7.5.4 after
+fixing private-key format and short known-credential redaction. The Docker
+frontend and SDK/runtime images now use verified multi-architecture registry
+digests, and all built-in .NET security analyzer rules are enabled.
+
+| Check | Current result |
+| --- | --- |
+| `./scripts/Verify.ps1` | Passed: locked restore/audit, Release build, 215 tests with zero skips, formatting/analyzers, vulnerability query and packaging |
+| Release build | Zero warnings/errors with security analyzers and warnings as errors |
+| NuGet direct/transitive vulnerability query | No known vulnerable packages reported; actual query contents checked |
+| `./scripts/Smoke-Test.ps1` | Passed: clean=0, finding=1, missing-ref=3; structured error and stale-report checks |
+| Independent source reviews | Runtime security and supply-chain reviewers found no additional actionable regressions in the fixes |
+| Docker build | Attempted; failed because the Docker Desktop Linux engine pipe was unavailable |
+| Container smoke / image vulnerability scan | Not run; no working Docker engine or rebuilt image |
+| Veracode package preparation | Passed: framework-dependent Debug ZIP, 8 DLLs and 5 verified portable PDBs, dependency/runtime metadata; no test binaries or native apphost |
+| Veracode / SonarQube analysis | Not run; target scanner/project configuration was not supplied for this task |
+
+Regression tests use synthetic key bodies and fake HTTP transports to check DSA
+and encrypted PKCS#8 blocks, including truncated blocks, from committed Git diffs
+through both provider request paths. They also cover short known credentials,
+regex metacharacters, overlapping literals and replacement ordering. No live
+provider, reference, host feedback or publishing calls were made.
+
+The source reviews covered first-party runtime boundaries and delivery
+configuration; they were not an audit of every line of the pinned upstream
+MAGICore dependency. Operating-system package vulnerabilities, dedicated secret
+scanning, deployed CI protections and hosted scanner results remain unverified.
+Passing these checks is not a zero-risk certification. See
+[security scanning](security-scanning.md) for reproducible local checks and scan
+preparation.
+
+## Earlier verification: 2026-10-28
+
 Verified locally on 2026-10-28 using .NET SDK 10.0.403, Windows, and Docker Desktop with Linux containers.
 
 | Check | Result |

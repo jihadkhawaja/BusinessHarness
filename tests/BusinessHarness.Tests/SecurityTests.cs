@@ -20,11 +20,41 @@ public sealed class SecurityTests
     [Theory]
     [InlineData("-----BEGIN PRIVATE KEY-----\nVERY-SENSITIVE-KEY-BODY\n-----END PRIVATE KEY-----")]
     [InlineData("-----BEGIN RSA PRIVATE KEY-----\n+VERY-SENSITIVE-KEY-BODY")]
+    [InlineData("-----BEGIN DSA PRIVATE KEY-----\nVERY-SENSITIVE-KEY-BODY\n-----END DSA PRIVATE KEY-----")]
+    [InlineData("-----BEGIN DSA PRIVATE KEY-----\n+VERY-SENSITIVE-KEY-BODY")]
+    [InlineData("-----BEGIN ENCRYPTED PRIVATE KEY-----\nVERY-SENSITIVE-KEY-BODY\n-----END ENCRYPTED PRIVATE KEY-----")]
+    [InlineData("-----BEGIN ENCRYPTED PRIVATE KEY-----\n+VERY-SENSITIVE-KEY-BODY")]
     public void RedactsEntirePrivateKeyIncludingTruncatedBlocks(string key)
     {
         var result = new SecretRedactor().Redact(key);
         Assert.DoesNotContain("VERY-SENSITIVE", result);
         Assert.Equal(key.Count(c => c == '\n'), result.Count(c => c == '\n'));
+    }
+
+    [Theory]
+    [InlineData("x")]
+    [InlineData("abc1234")]
+    [InlineData("a.*$[b]")]
+    public void MasksEveryNonemptyKnownCredentialAsALiteral(string secret)
+    {
+        var redactor = new SecretRedactor(["", secret]);
+        Assert.Equal("[REDACTED]", redactor.Redact(secret));
+        Assert.True(redactor.ContainsSecret(secret));
+    }
+
+    [Fact]
+    public void MasksOverlappingKnownCredentialsWithoutReprocessingReplacements()
+    {
+        var redactor = new SecretRedactor(["abc", "abcdef", "REDACTED"]);
+        Assert.Equal("[REDACTED] [REDACTED]", redactor.Redact("abcdef abc"));
+    }
+
+    [Fact]
+    public void ShortKnownCredentialCannotBreakPrivateKeyBodyMasking()
+    {
+        var redactor = new SecretRedactor(["KEY"]);
+        var result = redactor.Redact("-----BEGIN DSA PRIVATE KEY-----\nSYNTHETIC-BODY\n-----END DSA PRIVATE KEY-----");
+        Assert.DoesNotContain("SYNTHETIC-BODY", result);
     }
 
     [Theory]
