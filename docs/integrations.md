@@ -1,5 +1,9 @@
 # CI integration and distribution
 
+For a first-time setup, start with the illustrated
+[GitHub / GitLab + Jira walkthrough](ci-setup.md). It covers credentials, pipeline
+setup, the first review, and troubleshooting; this page is the integration reference.
+
 The CLI contract is identical across vendors. A completed review returns 0/1; integration errors return 2–10. Always retain the report directory even on failure. No organization/repository IDs, hosted image names, model IDs or tokens have been invented for you; replace the marked placeholders before deploying.
 
 ## PR review scope

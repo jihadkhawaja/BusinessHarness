@@ -38,10 +38,22 @@ Environment overrides: `HARNESS_PROVIDER`, `HARNESS_MODEL`, `HARNESS_JIRA_SITE`.
 | --- | --- |
 | OPENAI_API_KEY | OpenAI provider authentication |
 | ANTHROPIC_API_KEY | Claude provider authentication |
-| JIRA_EMAIL | Jira Cloud service account email |
+| JIRA_EMAIL | Jira Cloud automation account email |
 | JIRA_API_TOKEN | Jira Cloud API token with issue-read permission |
 
-Only the selected provider's API key is required. Use a dedicated Jira account with minimal project permissions and scoped token. Jira description text is extracted from Atlassian Document Format. Attachments are not fetched. Put Jira requirements in description or the configured field. Jira keys in the PR/MR title and description are discovered automatically when Jira is configured. Up to 20 distinct references can be resolved per review, including optional explicit `--issue` and `--reference` selections.
+Only the selected provider's API key is required. Use a dedicated Jira account
+with minimal project permissions and an API token compatible with the tenant
+endpoint. The native adapter uses Basic authentication at
+`https://your-team.atlassian.net/rest/api/3/...`; Atlassian scoped API tokens require
+the `api.atlassian.com` gateway, which this adapter does not support. See the
+[Jira credential walkthrough](ci-setup.md#create-the-jira-credentials) and
+[Atlassian's token documentation](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/).
+
+Jira description text is extracted from Atlassian Document Format. Attachments
+are not fetched. Put Jira requirements in description or the configured field.
+Jira keys in the PR/MR title and description are discovered automatically when
+Jira is configured. Up to 20 distinct references can be resolved per review,
+including optional explicit `--issue` and `--reference` selections.
 
 `validate` checks policy and required environment-variable presence; it makes no API calls and does not assert that credentials work. Use the first `review` run to verify remote authentication.
 

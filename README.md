@@ -122,6 +122,10 @@ and select it per review with `--skills dotnet,api-security` or the GitHub Actio
 
 ## Use in CI
 
+New to CI reviews? Follow the illustrated
+[GitHub / GitLab + Jira setup guide](docs/ci-setup.md) from your first ticket to
+your first PR/MR review report.
+
 Start with an example for your platform:
 
 [GitHub Actions](examples/pipelines/github.yml) · [GitLab CI](examples/pipelines/gitlab.yml) · [Azure DevOps](examples/pipelines/azure-devops.yml) · [Bitbucket Pipelines](examples/pipelines/bitbucket.yml)
