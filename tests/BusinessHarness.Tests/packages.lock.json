@@ -113,7 +113,7 @@
       "businessharness.application": {
         "type": "Project",
         "dependencies": {
-          "BusinessHarness.Core": "[0.1.0, )"
+          "BusinessHarness.Core": "[0.1.3, )"
         }
       },
       "businessharness.core": {
@@ -122,15 +122,15 @@
       "businessharness.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "BusinessHarness.Application": "[0.1.0, )",
+          "BusinessHarness.Application": "[0.1.3, )",
           "MagiCore": "[1.0.0, )"
         }
       },
       "BusinessHarness": {
         "type": "Project",
         "dependencies": {
-          "BusinessHarness.Application": "[0.1.0, )",
-          "BusinessHarness.Infrastructure": "[0.1.0, )"
+          "BusinessHarness.Application": "[0.1.3, )",
+          "BusinessHarness.Infrastructure": "[0.1.3, )"
         }
       },
       "magicore": {

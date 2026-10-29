@@ -45,8 +45,9 @@ jobs:
           }
           $version = $env:RELEASE_TAG.Substring(1)
           [xml]$props = Get-Content Directory.Build.props -Raw
-          if ($version -cne [string]$props.Project.PropertyGroup.Version) {
-              throw 'Release tag does not match Version in Directory.Build.props.'
+          $packageVersion = [string]$props.Project.PropertyGroup.Version
+          if ($version -cne $packageVersion) {
+              throw "Release tag '$env:RELEASE_TAG' requires Version '$version', but Directory.Build.props at the tagged commit contains '$packageVersion'. Commit the next unused Version on main before creating its matching tag and GitHub Release. Rerunning this tag will not pick up later commits."
           }
           git merge-base --is-ancestor HEAD refs/remotes/origin/main
           if ($LASTEXITCODE -ne 0) { throw 'Release commit must belong to main.' }

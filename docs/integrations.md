@@ -83,9 +83,12 @@ Maintainer setup:
    `publish-nuget.yml` (filename only), environment `nuget`. Select the intended
    package owner. Where scopes are offered, allow new packages and new versions
    only for the exact package pattern `BusinessHarness`. No stored API key is needed.
-3. Merge the release changes into `main`, create tag `v0.1.0` on the verified release
-   commit, and publish its GitHub Release. Observe the `Publish NuGet` workflow and
-   verify the package on NuGet.org; the public index and download badges can lag.
+3. Set `<Version>` in `Directory.Build.props` to the next unused stable version
+   (for example, `0.1.3`), then merge the release changes into `main`. Run
+   `./scripts/Verify.ps1` and `./scripts/Smoke-Test.ps1` on that commit before
+   creating its matching tag (for example, `v0.1.3`) and publishing its GitHub
+   Release. Observe the `Publish NuGet` workflow and verify the package on
+   NuGet.org; the public index and download badges can lag.
 
 New policies for private repositories can require activation within seven days.
 See [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
@@ -94,6 +97,14 @@ repository links and the GitHub build badge may require repository access.
 Publication intentionally fails if the package version already exists. If a push
 succeeded before a later step failed, inspect NuGet.org before rerunning; never
 replace a released version or move its tag. Use a new version for package changes.
+
+If validation reports that the release tag does not match `Directory.Build.props`,
+inspect the file **at the tagged commit**: the workflow checks out that tag, not
+the latest `main`. For example, `v0.1.1` containing `<Version>0.1.0</Version>`
+cannot publish `0.1.1`. Rerunning the failed workflow after changing `main` still
+checks out the same old commit. Commit the next unused version (for example,
+`0.1.3`) on `main`, verify it, and create the matching new tag and GitHub Release.
+Keep existing release tags unchanged.
 
 ## Local packaging and containers
 
