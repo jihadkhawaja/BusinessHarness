@@ -32,7 +32,8 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
             {
                 Provider = NonEmptyEnvironment("HARNESS_PROVIDER") ?? policy.Provider,
                 Model = NonEmptyEnvironment("HARNESS_MODEL") ?? policy.Model,
-                JiraSite = NonEmptyEnvironment("HARNESS_JIRA_SITE") ?? policy.JiraSite
+                JiraSite = NonEmptyEnvironment("HARNESS_JIRA_SITE") ?? policy.JiraSite,
+                EnabledSkills = options.Skills?.ToList() ?? policy.EnabledSkills
             };
             policy = policy with { Memory = await MemorySettings.ResolveAsync(policy.Memory, options, environment, cancellationToken) };
             policy.Validate();
@@ -53,6 +54,7 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
                 .Concat(policy.ReferenceSources.Select(s => s.TokenEnvironment).OfType<string>())
                 .Concat(changeRequest?.TokenEnvironment is { } hostSecret ? [hostSecret] : []);
             var redactor = new SecretRedactor(secretNames.Select(environment).OfType<string>());
+            if (options.Command is "review" or "validate") _ = ReviewContract.BuildInstructions(policy, redactor);
             IReviewMemory? memory = null;
             if (options.Command != "scan" && policy.Memory.Enabled)
             {
@@ -103,8 +105,8 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
             using var client = SafeHttp.CreateClient();
             var http = new SafeHttp(client);
             IReviewProvider? provider = options.Command == "scan" ? null : policy.Provider == "openai"
-                ? new OpenAiReviewProvider(http, policy, RequiredSecret(keyName))
-                : new AnthropicReviewProvider(http, policy, RequiredSecret(keyName));
+                ? new OpenAiReviewProvider(http, policy, RequiredSecret(keyName), redactor)
+                : new AnthropicReviewProvider(http, policy, RequiredSecret(keyName), redactor);
             IIssueSource? jira = options.Command == "scan" || (policy.JiraSite is null && !options.IssueKeys.Any(JiraIssueSource.IsIssueKey)) ? null : new JiraIssueSource(http, policy,
                 RequiredSecret("JIRA_EMAIL"), RequiredSecret("JIRA_API_TOKEN"), redactor);
             IReferenceResolver? resolver = options.Command == "scan" ? null : new ReferenceResolver(http, policy, environment, redactor, jira);
@@ -208,6 +210,7 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
         --change URL      GitHub PR or GitLab MR; auto-detected in GitHub/GitLab CI
         --feedback MODE   none (default), comment, auto (approve pass / reject failure)
         --comment-template PATH  Explicit TRUSTED UTF-8 Markdown template (review/validate)
+        --skills NAMES    Enable comma-separated trusted skill names, or none (review/validate)
         --memory-scope S  off, global, repository or session; overrides trusted memory defaults
         --memory-directory PATH  Persistent trusted storage outside the reviewed checkout
         --session ID      Stable session/thread ID; also HARNESS_SESSION_ID

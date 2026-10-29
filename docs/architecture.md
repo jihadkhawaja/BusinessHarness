@@ -1,5 +1,12 @@
 # Architecture
 
+Trusted policy can define a bounded `skillBank` and `enabledSkills`. Invocation
+`--skills` overrides the enabled names. The provider contract redacts and inserts
+only selected skill guidance into system instructions; the model chooses relevant
+guidance by description within its single review call. Skills add no tools or file
+access and remain subordinate to the shared review rules. Skills are never loaded
+from reviewed repository content. See [skills configuration](configuration.md#review-skills-bank).
+
 Dependencies point inward:
 
 ```mermaid

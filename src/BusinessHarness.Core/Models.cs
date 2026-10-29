@@ -15,10 +15,13 @@ public sealed record HarnessPolicy
     public List<ReferenceSourcePolicy> ReferenceSources { get; init; } = [];
     public ChangeRequestPolicy? ChangeRequest { get; init; }
     public string? ReviewCommentTemplate { get; init; }
+    public List<ReviewSkill> SkillBank { get; init; } = [];
+    public List<string> EnabledSkills { get; init; } = [];
     public MemoryPolicy? Memory { get; init; }
 
     public void Validate()
     {
+        ReviewSkill.Validate(SkillBank, EnabledSkills);
         if (ReferenceSources is null || ReferenceSources.Count > 20 ||
             ReferenceSources.Any(s => s is null) ||
             ReferenceSources.Select(s => s.Name).Distinct(StringComparer.Ordinal).Count() != ReferenceSources.Count)

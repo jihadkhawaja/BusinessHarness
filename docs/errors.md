@@ -22,6 +22,11 @@ placeholders, unsupported control characters, invalid UTF-8, and templates above
 Rendered comments above 60,000 characters use BH1007 and are withheld before any
 host write. See [template configuration](configuration.md#review-comment-templates).
 
+Invalid skill banks or selections use BH1002: null/duplicate entries, unknown
+enabled names, invalid controls, and per-entry or aggregate size limits are
+configuration errors. The same bounds apply after redaction. No provider or host
+call is made for invalid CLI configuration. See [review skills](configuration.md#review-skills-bank).
+
 Example `error.json`:
 
 ```json

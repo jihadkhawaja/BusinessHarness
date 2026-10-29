@@ -6,7 +6,7 @@ using BusinessHarness.Core;
 namespace BusinessHarness.Infrastructure;
 
 /// <summary>Responses API adapter. Uses no tools and disables response storage.</summary>
-public sealed class OpenAiReviewProvider(SafeHttp http, HarnessPolicy policy, string apiKey) : IReviewProvider
+public sealed class OpenAiReviewProvider(SafeHttp http, HarnessPolicy policy, string apiKey, SecretRedactor? redactor = null) : IReviewProvider
 {
     public async Task<ReviewResult> ReviewAsync(ChangeSet changes, IReadOnlyList<ReferenceDocument> issues, CancellationToken cancellationToken)
     {
@@ -16,7 +16,7 @@ public sealed class OpenAiReviewProvider(SafeHttp http, HarnessPolicy policy, st
         {
             model = policy.Model,
             store = false,
-            instructions = ReviewContract.Instructions,
+            instructions = ReviewContract.BuildInstructions(policy, redactor ?? new([apiKey])),
             input = ReviewContract.BuildInput(changes, issues),
             max_output_tokens = policy.MaxOutputTokens,
             text = new { format = new { type = "json_schema", name = "repository_review", strict = true, schema = ReviewContract.Schema } }

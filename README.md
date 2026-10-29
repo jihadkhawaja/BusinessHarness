@@ -27,6 +27,7 @@ Review code changes, check them against tickets and specs, and catch potential i
 
 - **AI reviews** with OpenAI or Claude, plus an offline credential-pattern scan.
 - **Ticket and spec checks** using Jira Cloud or configured JSON APIs.
+- **Configurable review skills** from a trusted bank, enabled per pipeline or PR review.
 - **Optional feedback and memory** for PR/MR comments, approvals, and follow-up reviews.
 - **Reports you can use** in JSON, Markdown, and SARIF.
 
@@ -68,6 +69,11 @@ Customize PR/MR review comments with `--comment-template PATH` or trusted policy
 Start from the [default template](src/BusinessHarness.Infrastructure/Templates/review-comment.md) and follow the
 [template configuration guide](docs/configuration.md#review-comment-templates).
 
+Define reusable review guidance in a trusted [skills bank](examples/harness.skills.policy.json)
+and select it per review with `--skills dotnet,api-security` or the GitHub Action's
+`skills` input. Agents apply relevant enabled skills on demand; see
+[review skills](docs/configuration.md#review-skills-bank).
+
 ## Use in CI
 
 Start with an example for your platform:
@@ -107,13 +113,14 @@ See [AGENTS.md](AGENTS.md) for contributor guidance and [docs/codex.md](docs/cod
 ## License
 
 Copyright (c) 2026 **Jihad Khawaja**. Free for personal, non-commercial use.
-Organizations employing Jihad Khawaja when license version 1.1 is first made
-available or afterward also receive free organization-wide internal enterprise
-use, including by employees and contractors acting on their behalf. Their rights
-continue after his employment ends and cover future versions he makes available,
-subject to the [employer exception](LICENSE). Resale, external redistribution,
-third-party hosted services, work on behalf of other organizations, and other
-commercial or organizational use require a paid license; contact
+Past, current, and future employers of Jihad Khawaja also receive free
+organization-wide internal enterprise use, including by employees and contractors
+acting on their behalf. This permission applies retroactively to copies distributed
+under license version 1.0 and continues after his employment ends, including future
+versions he makes available, subject to the [employer exception](LICENSE).
+Resale, external redistribution, third-party hosted services, work on behalf of
+other organizations, and other commercial or organizational use require a paid
+license; contact
 [jihadkhawaja@outlook.com](mailto:jihadkhawaja@outlook.com).
 
 See [LICENSE](LICENSE) for full terms and [third-party notices](THIRD-PARTY-NOTICES.md) for dependency licenses.

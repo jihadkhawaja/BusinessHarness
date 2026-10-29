@@ -27,11 +27,12 @@ Software itself, except as expressly permitted by section 3.
 
 3. Free employer use
 
-A "Qualifying Employer" is a legal entity that employs Jihad Khawaja when this
-version of the license is first made available by the Licensor or at any time
-thereafter. An entity does not qualify solely because it is a customer, client,
-parent, subsidiary, affiliate, or recipient of consulting services; it must
-itself employ Jihad Khawaja.
+A "Qualifying Employer" is a legal entity that has employed, currently employs,
+or later employs Jihad Khawaja. There is no employment-date cutoff based on
+when this license or an earlier version was first made available. An entity
+does not qualify solely because it is a customer, client, parent, subsidiary,
+affiliate, or recipient of consulting services; it must itself employ or have
+employed Jihad Khawaja.
 
 The Licensor grants each Qualifying Employer a perpetual, worldwide,
 non-exclusive, non-transferable, royalty-free license to use, copy, study,
@@ -42,6 +43,15 @@ covers organization-wide use by its employees and contractors acting solely
 on its behalf, including use in its repositories, CI/CD pipelines, and internal
 tools. The Qualifying Employer is responsible for their compliance with this
 license. Internal modifications need not be published or disclosed.
+
+This employer permission applies retroactively to the Software distributed
+under license version 1.0, as well as under this and later license versions,
+including copies already obtained and past use within this section's scope.
+For such past use, no license fee is owed, and the Licensor waives claims based
+solely on the absence of a paid commercial or enterprise license under earlier
+terms. A Qualifying Employer may rely on this grant even when its copy includes
+an earlier license without the employer exception. All other conditions and
+third-party license requirements remain applicable.
 
 Once an entity qualifies, these rights continue after Jihad Khawaja's employment
 ends, regardless of the reason. They apply to all existing versions and

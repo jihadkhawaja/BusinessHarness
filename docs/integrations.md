@@ -55,10 +55,12 @@ The public package ID is `BusinessHarness`; its executable is `businessharness`.
 Install an exact version with `dotnet tool install --global BusinessHarness --version 0.1.0`.
 The package includes the BusinessHarness license, third-party notices and
 MAGICore's Apache 2.0 license. The [BusinessHarness license](../LICENSE) permits
-personal non-commercial use and free internal enterprise use for qualifying
-employers of Jihad Khawaja, including future versions after his employment ends.
-Other commercial or organizational use requires a paid license. Check the license
-included in the specific package version; older packages may carry earlier terms.
+personal non-commercial use and free internal enterprise use for past, current,
+and future employers of Jihad Khawaja under the employer exception. The exception
+applies retroactively to copies distributed under license version 1.0, even if
+their bundled license omits it, and includes future versions after his employment
+ends. Other commercial or organizational use requires a paid license. Retain
+this grant alongside older packages as evidence of the employer permission.
 
 [publish-nuget.yml](../.github/workflows/publish-nuget.yml) runs on a **published,
 stable GitHub Release**, starting with `v0.1.0`. Pushing a tag alone does not publish
@@ -139,6 +141,40 @@ Alternatively, set `reviewCommentTemplate` in trusted policy. Start from the
 [template configuration](configuration.md#review-comment-templates) for placeholders,
 limits, and precedence. The action resolves relative paths from its own directory,
 so prefer absolute paths. Do not select a template from the PR branch being reviewed.
+
+## Pipeline skill selection
+
+Store the [example skills policy](../examples/harness.skills.policy.json) in your
+protected pipeline checkout and adapt its bank to your team. Set `HARNESS_MODEL`
+and the provider's secret as usual. In the trusted-base
+[GitHub example](../examples/pipelines/github.yml), the review step can select:
+
+```yaml
+with:
+  config: ${{ github.workspace }}/examples/harness.skills.policy.json
+  skills: dotnet,api-security
+```
+
+The `skills` action input overrides `enabledSkills` in that explicit policy.
+Omit it to use the policy defaults, select `database` for a migration review,
+or pass `none` for a review without supplemental skills. The config path must
+refer to your trusted checkout; never check out the PR to load its skill bank.
+Use protected pipeline variables or maintainer-controlled dispatch inputs when
+varying the selected names per request. Selection does not change job permissions
+or grant approval authority.
+
+GitLab, Azure DevOps, Bitbucket and local/container invocations use the same CLI:
+
+```bash
+businessharness review --repo /repo --base "$TARGET_SHA" --head "$SOURCE_SHA" \
+  --config /trusted/policy.json --skills dotnet,database --output /reports
+```
+
+Provision `/trusted/policy.json` through trusted pipeline configuration and mount
+it read-only for containers. The enabled subset is supplied to either provider;
+the model applies relevant skills on demand within the existing diff review.
+There is no skill script execution or external skill fetching. See
+[the skills contract](configuration.md#review-skills-bank) for limits and precedence.
 
 ## Persistent memory and follow-up events
 

@@ -5,7 +5,7 @@ using BusinessHarness.Core;
 namespace BusinessHarness.Infrastructure;
 
 /// <summary>Claude Messages API adapter using native structured outputs and no tools.</summary>
-public sealed class AnthropicReviewProvider(SafeHttp http, HarnessPolicy policy, string apiKey) : IReviewProvider
+public sealed class AnthropicReviewProvider(SafeHttp http, HarnessPolicy policy, string apiKey, SecretRedactor? redactor = null) : IReviewProvider
 {
     public async Task<ReviewResult> ReviewAsync(ChangeSet changes, IReadOnlyList<ReferenceDocument> issues, CancellationToken cancellationToken)
     {
@@ -16,7 +16,7 @@ public sealed class AnthropicReviewProvider(SafeHttp http, HarnessPolicy policy,
         {
             model = policy.Model,
             max_tokens = policy.MaxOutputTokens,
-            system = ReviewContract.Instructions,
+            system = ReviewContract.BuildInstructions(policy, redactor ?? new([apiKey])),
             messages = new[] { new { role = "user", content = ReviewContract.BuildInput(changes, issues) } },
             output_config = new { format = new { type = "json_schema", schema = ReviewContract.Schema } }
         });

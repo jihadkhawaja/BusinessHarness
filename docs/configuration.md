@@ -163,6 +163,82 @@ the complete rendered comment is also checked for known secrets. A custom templa
 does not change the severity gate, approval rules, or feedback opt-in. Local
 `review.md`, JSON, and SARIF reports retain their default formats.
 
+## Review skills bank
+
+Skills are reusable, supplemental review instructions configured by the developer
+in explicit trusted policy. They are independent of contributor Codex skills and
+`AGENTS.md`. Start with the [example bank](../examples/harness.skills.policy.json)
+or add these properties to your existing policy:
+
+```json
+{
+  "skillBank": [
+    {
+      "name": "api-security",
+      "description": "Use for endpoint or authorization changes.",
+      "instructions": "Check tenant isolation and authorization before data access. Report concrete defects supported by the supplied added lines."
+    },
+    {
+      "name": "database",
+      "description": "Use for schema migrations or persistence changes.",
+      "instructions": "Check compatibility with existing readers and writers, data loss and transaction boundaries using only supplied diff evidence."
+    }
+  ],
+  "enabledSkills": ["api-security"]
+}
+```
+
+`skillBank` and `enabledSkills` both default to empty. Defining a skill does not
+enable it. `enabledSkills` names the bank entries made available to the agent;
+the agent uses their descriptions to apply relevant guidance on demand and skip
+irrelevant skills. Both OpenAI and Claude receive the same enabled guidance in
+their system instructions, separate from untrusted diff/reference/memory data.
+Only enabled entries are sent. Each review still uses one provider call with no
+tool calls or additional skill downloads; enabled text is included up front and
+counts toward the model's context. Applicability remains a model judgment, not
+proof of checklist completion.
+
+For a particular PR/MR, replace the policy's enabled set at invocation:
+
+```powershell
+businessharness validate --config C:/runner/policy.json --skills api-security,database
+businessharness review --base origin/main --head HEAD --config C:/runner/policy.json --skills database
+businessharness review --base origin/main --config C:/runner/policy.json --skills none
+```
+
+`--skills` replaces rather than merges `enabledSkills`; omitting it uses policy
+defaults. `none` explicitly disables all skills. The option is available only to
+`review` and `validate`; `scan` stays offline and does not use skills. Whitespace
+around comma-separated names is ignored. Empty, repeated or unknown names fail
+with BH1002 before provider or host calls. `validate` checks the bank and selection
+without contacting APIs; its existing model/credential requirements still apply.
+
+| Limit | Contract |
+| --- | --- |
+| Bank / enabled set | At most 20 entries each, with unique case-sensitive names |
+| Name | 1–64 ASCII lowercase letters, digits, `-` or `_`; `none` is reserved |
+| Description | 1–500 characters, with non-whitespace content |
+| Instructions | 1–8,000 characters, with non-whitespace content |
+| Entire bank | At most 32,000 UTF-8 bytes across names, descriptions and instructions, including disabled entries |
+| Controls | Only tab, CR and LF allowed in description/instructions |
+
+The existing 64,000-byte policy file limit also applies, including JSON syntax and
+escaping. Null entries, unknown JSON properties, invalid types and limits fail
+closed. Selected guidance is redacted for known credentials and token patterns;
+limits are checked again after redaction. Never store credentials in skills.
+
+Keep policy in a protected base checkout or runner-managed location. The harness
+never discovers skills from PR files, `SKILL.md`, `AGENTS.md`, descriptions,
+comments, references or memory. Those sources cannot enable skills or define
+skill text. Configure selection in the trusted pipeline, using the action's
+[`skills` input](integrations.md#pipeline-skill-selection) or `--skills` on every
+other platform. Do not derive skill instructions or config paths from PR content.
+
+Skills cannot grant tools, execute scripts, read additional files, change output
+schemas, override built-in review rules, suppress local findings, satisfy reference
+requirements without current evidence, or authorize feedback. Existing severity
+gates, line validation and approval restrictions continue to apply.
+
 ## Long-term memory
 
 The optional `memory` object configures durable MAGICore memory, global/repository/session scopes, retrieval limits, retention, and allowed agent mentions. Global defaults can come from `HARNESS_MEMORY_CONFIG`; explicit repository memory settings replace them, and invocation settings can override scope/session. See [memory setup](memory.md) for the full contract, follow-up payloads, container persistence and examples.

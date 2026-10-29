@@ -41,6 +41,9 @@ jobs:
           head: ${{ github.event.pull_request.head.sha }}
           provider: ${{ vars.HARNESS_PROVIDER || 'openai' }}
           model: ${{ vars.HARNESS_MODEL }}
+          # Optional: copy the example bank into this trusted base checkout.
+          # config: ${{ github.workspace }}/examples/harness.skills.policy.json
+          # skills: dotnet,api-security # Or database for a migration review; none disables skills.
           feedback: none # comment or auto requires pull-requests: write and repository approval settings.
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

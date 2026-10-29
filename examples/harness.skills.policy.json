@@ -1,0 +1,20 @@
+{
+  "skillBank": [
+    {
+      "name": "dotnet",
+      "description": "Use when reviewing C# or .NET application changes.",
+      "instructions": "Check cancellation propagation, disposal of owned resources, nullable handling and asynchronous operations. Report only concrete defects supported by added lines in the supplied diff."
+    },
+    {
+      "name": "api-security",
+      "description": "Use when reviewing endpoints, authentication or authorization changes.",
+      "instructions": "Check authorization before data access, tenant isolation, validation of identifiers, and whether sensitive values enter responses or logs. Explain the triggering request and impact for each supported defect."
+    },
+    {
+      "name": "database",
+      "description": "Use when reviewing schema migrations or persistence changes.",
+      "instructions": "Check compatibility with existing readers and writers, data loss, transaction boundaries, and unbounded queries where the diff provides evidence. Do not assume migration execution or runtime performance has been verified."
+    }
+  ],
+  "enabledSkills": ["dotnet", "api-security"]
+}

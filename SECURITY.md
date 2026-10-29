@@ -10,6 +10,14 @@ Credentials come from secret environment variables. Known runtime tokens, common
 
 Prompt separation, schema constraints and finding validation reduce the effects of prompt injection; they do not prove that a model's judgment is correct. Local findings cannot be removed by model output. Missing/partial/unverifiable reference assessments fail the gate. Size limits, refusals and incomplete responses stop the run. AI review supplements code review, tests, SAST and policy controls.
 
+Review skills are explicit trusted policy, with a bounded bank and an allowlisted
+per-invocation selection. Only selected, redacted guidance enters provider system
+instructions, subordinate to the built-in review rules. PR files, metadata,
+references, comments and memory cannot define or enable skills. The runtime does
+not discover `SKILL.md` files, execute skill scripts, download skill resources or
+grant tools. Protect bank definitions and pipeline selection alongside other
+policy; skills do not change validation, gates, or feedback authorization.
+
 Pipeline guidance:
 
 - Pin runner/action/image artifacts to reviewed commits/digests. Never build this runner from the PR being reviewed while supplying API secrets.

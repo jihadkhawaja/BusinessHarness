@@ -5,7 +5,7 @@ namespace BusinessHarness.Cli;
 public sealed record CliOptions(string Command, string Repository, string BaseRef, string HeadRef,
     string OutputDirectory, string? ConfigPath, string[] IssueKeys, string? ChangeUrl = null, string Feedback = "none",
     string? MemoryScope = null, string? MemoryDirectory = null, string? SessionId = null, string? EventPath = null, string? Query = null,
-    string? CommentTemplatePath = null)
+    string? CommentTemplatePath = null, string[]? Skills = null)
 {
     public static CliOptions Parse(string[] args, Func<string, string?> environment)
     {
@@ -13,7 +13,7 @@ public sealed record CliOptions(string Command, string Repository, string BaseRe
         if (args.Length == 1 && args[0] == "--version") return new("version", "", "", "", "", null, []);
         if (args.Length == 0 || args[0] is not ("review" or "scan" or "validate" or "follow-up" or "memory-search"))
             throw Usage("A valid command is required.");
-        var allowed = new[] { "--repo", "--base", "--head", "--output", "--config", "--issue", "--reference", "--change", "--feedback", "--comment-template", "--memory-scope", "--memory-directory", "--session", "--event", "--query" };
+        var allowed = new[] { "--repo", "--base", "--head", "--output", "--config", "--issue", "--reference", "--change", "--feedback", "--comment-template", "--skills", "--memory-scope", "--memory-directory", "--session", "--event", "--query" };
         Dictionary<string, string> values = new(StringComparer.Ordinal);
         for (var i = 1; i < args.Length; i += 2)
         {
@@ -30,6 +30,15 @@ public sealed record CliOptions(string Command, string Repository, string BaseRe
         if (values.ContainsKey("--event") && args[0] is not ("review" or "follow-up")) throw Usage("Events require review or follow-up.");
         if (values.ContainsKey("--query") && args[0] != "memory-search") throw Usage("Query is only supported by memory-search.");
         if (values.ContainsKey("--comment-template") && args[0] is not ("review" or "validate")) throw Usage("Comment templates require review or validate.");
+        string[]? skills = null;
+        if (values.TryGetValue("--skills", out var selection))
+        {
+            if (args[0] is not ("review" or "validate")) throw Usage("Skills require review or validate.");
+            skills = selection == "none" ? [] : selection.Split(',', StringSplitOptions.TrimEntries);
+            if (skills.Length > ReviewSkill.MaxCount || skills.Any(s => !ReviewSkill.IsName(s)) ||
+                skills.Distinct(StringComparer.Ordinal).Count() != skills.Length)
+                throw Usage("Select unique comma-separated skill names, or none.");
+        }
         var issues = string.Join(',', values.GetValueOrDefault("--issue") ?? "", values.GetValueOrDefault("--reference") ?? "")
             .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (issues.Length > 20) throw Usage("At most 20 references are supported per run.");
@@ -42,7 +51,7 @@ public sealed record CliOptions(string Command, string Repository, string BaseRe
             values.GetValueOrDefault("--head") ?? environment("HARNESS_HEAD") ?? "HEAD",
             Path.GetFullPath(values.GetValueOrDefault("--output") ?? "harness-results"), values.GetValueOrDefault("--config"), issues,
             values.GetValueOrDefault("--change"), feedback, values.GetValueOrDefault("--memory-scope"), values.GetValueOrDefault("--memory-directory"),
-            values.GetValueOrDefault("--session"), values.GetValueOrDefault("--event"), values.GetValueOrDefault("--query"), values.GetValueOrDefault("--comment-template"));
+            values.GetValueOrDefault("--session"), values.GetValueOrDefault("--event"), values.GetValueOrDefault("--query"), values.GetValueOrDefault("--comment-template"), skills);
     }
 
     private static HarnessException Usage(string message) => new(ErrorCode.Configuration, message,
