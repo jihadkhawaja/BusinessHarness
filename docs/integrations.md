@@ -57,13 +57,8 @@ Update an existing installation with `dotnet tool update --global BusinessHarnes
 For reproducible CI runs, pin a reviewed version, for example
 `dotnet tool install --global BusinessHarness --version 0.1.0`.
 The package includes the BusinessHarness license, third-party notices and
-MAGICore's Apache 2.0 license. The [BusinessHarness license](../LICENSE) permits
-personal non-commercial use and free internal enterprise use for past, current,
-and future employers of Jihad Khawaja under the employer exception. The exception
-applies retroactively to copies distributed under license version 1.0, even if
-their bundled license omits it, and includes future versions after his employment
-ends. Other commercial or organizational use requires a paid license. Retain
-this grant alongside older packages as evidence of the employer permission.
+MAGICore's Apache 2.0 license. See [LICENSE](../LICENSE) for BusinessHarness usage
+and commercial licensing terms, including the employer exception.
 
 [publish-nuget.yml](../.github/workflows/publish-nuget.yml) runs on a **published,
 stable GitHub Release**, starting with `v0.1.0`. Pushing a tag alone does not publish

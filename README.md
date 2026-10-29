@@ -158,15 +158,7 @@ See [AGENTS.md](AGENTS.md) for contributor guidance and [docs/codex.md](docs/cod
 
 ## License
 
-Copyright (c) 2026 **Jihad Khawaja**. Free for personal, non-commercial use.
-Past, current, and future employers of Jihad Khawaja also receive free
-organization-wide internal enterprise use, including by employees and contractors
-acting on their behalf. This permission applies retroactively to copies distributed
-under license version 1.0 and continues after his employment ends, including future
-versions he makes available, subject to the [employer exception](LICENSE).
-Resale, external redistribution, third-party hosted services, work on behalf of
-other organizations, and other commercial or organizational use require a paid
-license; contact
-[jihadkhawaja@outlook.com](mailto:jihadkhawaja@outlook.com).
+Copyright (c) 2026 **Jihad Khawaja**.
 
-See [LICENSE](LICENSE) for full terms and [third-party notices](THIRD-PARTY-NOTICES.md) for dependency licenses.
+See [LICENSE](LICENSE) for usage and commercial licensing terms, including the employer exception,
+and [third-party notices](THIRD-PARTY-NOTICES.md) for dependency licenses.
