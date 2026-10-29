@@ -25,6 +25,7 @@
 
 Review code changes, check them against tickets and specs, and catch potential issues before merging. BusinessHarness is a .NET 10 CLI that runs locally or in GitHub Actions, GitLab CI, Azure DevOps, and Bitbucket Pipelines.
 
+- **Unified experience across all pipelines** — the same CLI commands, review policy, report formats, and exit codes across GitHub Actions, GitLab CI, Azure DevOps, and Bitbucket Pipelines.
 - **AI reviews** with OpenAI or Claude, plus an offline credential-pattern scan.
 - **Ticket and spec checks** using Jira Cloud or configured JSON APIs.
 - **Configurable review skills** from a trusted bank, enabled per pipeline or PR review.
@@ -75,12 +76,15 @@ and [exit codes](docs/errors.md).
 
 ## Quick start
 
-Requires .NET 10 and Git.
+Requires .NET 10 and Git. Install the latest stable release:
 
 ```powershell
-dotnet tool install --global BusinessHarness --version 0.1.0
+dotnet tool install --global BusinessHarness
 businessharness --help
 ```
+
+Already installed? Update with `dotnet tool update --global BusinessHarness`.
+For reproducible CI runs, pin a reviewed version with `--version`.
 
 Scan a repository without credentials or network requests:
 

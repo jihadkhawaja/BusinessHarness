@@ -52,7 +52,10 @@ PR-head merge check. The workflow becomes active after reaching `main`.
 ## NuGet.org releases
 
 The public package ID is `BusinessHarness`; its executable is `businessharness`.
-Install an exact version with `dotnet tool install --global BusinessHarness --version 0.1.0`.
+Install the latest stable release with `dotnet tool install --global BusinessHarness`.
+Update an existing installation with `dotnet tool update --global BusinessHarness`.
+For reproducible CI runs, pin a reviewed version, for example
+`dotnet tool install --global BusinessHarness --version 0.1.0`.
 The package includes the BusinessHarness license, third-party notices and
 MAGICore's Apache 2.0 license. The [BusinessHarness license](../LICENSE) permits
 personal non-commercial use and free internal enterprise use for past, current,
