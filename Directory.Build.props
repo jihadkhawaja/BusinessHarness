@@ -13,7 +13,7 @@
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
-    <Version>0.1.3</Version>
+    <Version>0.1.5</Version>
     <Authors>Jihad Khawaja</Authors>
     <Copyright>Copyright (c) 2026 Jihad Khawaja. All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
