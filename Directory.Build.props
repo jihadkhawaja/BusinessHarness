@@ -17,7 +17,7 @@
     <Authors>Jihad Khawaja</Authors>
     <Copyright>Copyright (c) 2026 Jihad Khawaja. All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="/" Link="LICENSE" />

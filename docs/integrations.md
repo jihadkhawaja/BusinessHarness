@@ -61,8 +61,8 @@ Update an existing installation with `dotnet tool update --global BusinessHarnes
 For reproducible CI runs, pin a reviewed version, for example
 `dotnet tool install --global BusinessHarness --version 0.1.0`.
 The package includes the BusinessHarness license, third-party notices and
-MAGICore's Apache 2.0 license. See [LICENSE](../LICENSE) for BusinessHarness usage
-and commercial licensing terms, including the employer exception.
+MAGICore's Apache 2.0 license. BusinessHarness is licensed under the
+[MIT License](../LICENSE).
 
 [publish-nuget.yml](../.github/workflows/publish-nuget.yml) runs on a **published,
 stable GitHub Release**, starting with `v0.1.0`. Pushing a tag alone does not publish

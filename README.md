@@ -19,7 +19,7 @@
 [![NuGet total downloads](https://img.shields.io/nuget/dt/BusinessHarness.svg)](https://www.nuget.org/packages/BusinessHarness)
 [![Security policy](https://img.shields.io/badge/security-policy-blue)](SECURITY.md)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
-[![License](https://img.shields.io/badge/License-blue)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 </div>
 
@@ -165,5 +165,5 @@ See [AGENTS.md](AGENTS.md) for contributor guidance and [docs/codex.md](docs/cod
 
 Copyright (c) 2026 **Jihad Khawaja**.
 
-See [LICENSE](LICENSE) for usage and commercial licensing terms, including the employer exception,
-and [third-party notices](THIRD-PARTY-NOTICES.md) for dependency licenses.
+Licensed under the [MIT License](LICENSE). See
+[third-party notices](THIRD-PARTY-NOTICES.md) for dependency licenses.

@@ -1,134 +1,21 @@
-BusinessHarness Personal Non-Commercial, Employer, and Commercial License
-Version 1.1
+MIT License
 
-Copyright (c) 2026 Jihad Khawaja. All rights reserved.
+Copyright (c) 2026 Jihad Khawaja
 
-1. Scope
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-This license applies to BusinessHarness and its accompanying source code,
-executables, packages, container images, scripts, examples, and documentation
-(the "Software"), except third-party materials governed by their own licenses.
-Jihad Khawaja is the licensor (the "Licensor").
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-2. Free individual, non-commercial use
-
-An individual acting solely in a personal capacity may use, copy, study, modify,
-and share the Software without a license fee, solely for personal,
-non-commercial purposes, subject to this license. Examples include personal
-learning, experimentation, and personal projects that do not serve a commercial
-purpose or an organization.
-
-Non-commercial use means use that is not intended for or directed toward
-commercial advantage, business operations, monetary compensation, or other
-economic benefit, directly or indirectly. This permission does not cover work
-for an employer, customer, client, business, enterprise, or other organization,
-even when an individual performs that work or no fee is charged for the
-Software itself, except as expressly permitted by section 3.
-
-3. Free employer use
-
-A "Qualifying Employer" is a legal entity that has employed, currently employs,
-or later employs Jihad Khawaja. There is no employment-date cutoff based on
-when this license or an earlier version was first made available. An entity
-does not qualify solely because it is a customer, client, parent, subsidiary,
-affiliate, or recipient of consulting services; it must itself employ or have
-employed Jihad Khawaja.
-
-The Licensor grants each Qualifying Employer a perpetual, worldwide,
-non-exclusive, non-transferable, royalty-free license to use, copy, study,
-modify, and internally distribute the Software for its own internal business
-and enterprise operations, including commercial operations, without a paid
-license, separate agreement, registration, or further approval. This grant
-covers organization-wide use by its employees and contractors acting solely
-on its behalf, including use in its repositories, CI/CD pipelines, and internal
-tools. The Qualifying Employer is responsible for their compliance with this
-license. Internal modifications need not be published or disclosed.
-
-This employer permission applies retroactively to the Software distributed
-under license version 1.0, as well as under this and later license versions,
-including copies already obtained and past use within this section's scope.
-For such past use, no license fee is owed, and the Licensor waives claims based
-solely on the absence of a paid commercial or enterprise license under earlier
-terms. A Qualifying Employer may rely on this grant even when its copy includes
-an earlier license without the employer exception. All other conditions and
-third-party license requirements remain applicable.
-
-Once an entity qualifies, these rights continue after Jihad Khawaja's employment
-ends, regardless of the reason. They apply to all existing versions and
-automatically to all future versions of the Software that the Licensor makes
-available, even after that employment ends and even if a future version carries
-different license terms, to the extent the Licensor owns or controls the rights
-needed for this grant. No later change to this license withdraws or narrows
-this grant for an entity that has qualified, subject to section 6 and applicable
-law. This grant does not require the Licensor to create or deliver future
-versions or provide support, maintenance, or access to private repositories.
-
-This exception does not permit resale, external redistribution, sublicensing,
-offering the Software's functionality as a hosted service to third parties, or
-using it to perform work on behalf of other organizations. Those activities
-require a separate paid commercial license. It does permit using the Software
-internally to develop and maintain the Qualifying Employer's own commercial
-products and services; those products and services may be sold to customers
-provided they do not distribute the Software or offer its functionality to
-third parties. This exception does not grant rights to third-party materials
-beyond their own licenses or transfer ownership of the Software.
-
-4. Paid commercial and enterprise use
-
-Commercial use, and use by or on behalf of a business, enterprise, employer,
-institution, or other organization, requires a separate paid commercial license
-from the Licensor before such use begins, except for use expressly permitted
-by section 3. This requirement applies regardless of an organization's size or
-profit status.
-
-Examples include using the Software in business or enterprise repositories or
-CI/CD pipelines, internal organizational tooling, paid consulting or client
-work, commercial products or services, hosted services, and commercial
-redistribution or resale.
-
-To obtain pricing and a commercial or enterprise license, contact:
-
-    Jihad Khawaja
-    jihadkhawaja@outlook.com
-
-Contacting the Licensor does not itself grant commercial or enterprise rights.
-Rights requiring a paid license are governed by a separate written agreement
-with the Licensor. The employer rights in section 3 need no such agreement.
-
-5. Notices, modifications, and redistribution
-
-Keep this license and the copyright notice with every copy or substantial
-portion of the Software, including modified versions. Clearly identify your
-modifications. You may not remove these restrictions, relicense the Software
-under terms that grant broader rights, or represent that the free license
-permits commercial or organizational use beyond the employer exception in
-section 3.
-
-Anyone receiving a copy is subject to this license and must obtain a separate
-paid license when their intended use requires one, unless section 3 expressly
-permits that use. Sharing or modifying the Software does not expand the
-permissions granted here. No trademark or endorsement rights are granted.
-
-6. Ownership and termination
-
-The Licensor retains all rights in the Software not expressly granted by this
-license. The permissions granted by this license terminate automatically if
-you violate its terms. Upon termination, stop using and distributing the
-Software and delete copies under your control, unless a separate written
-agreement permits continued use.
-
-7. Disclaimer of warranty and limitation of liability
-
-TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
-"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
-AND NON-INFRINGEMENT. IN NO EVENT SHALL THE LICENSOR OR COPYRIGHT HOLDER BE
-LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
-SOFTWARE OR ITS USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-8. Third-party materials
-
-Third-party dependencies and materials retain their respective copyrights and
-licenses. This license does not replace those licenses or grant rights the
-Licensor does not hold.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

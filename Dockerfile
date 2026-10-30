@@ -11,7 +11,7 @@ RUN dotnet publish src/BusinessHarness.Cli/BusinessHarness.Cli.csproj -c Release
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0.14@sha256:a3f9f81954b9c810af2ed18849716c8dc74a4707bd0907fdbd69be81554c0f30 AS runtime
 LABEL org.opencontainers.image.authors="Jihad Khawaja <jihadkhawaja@outlook.com>" \
-      org.opencontainers.image.licenses="LicenseRef-BusinessHarness"
+      org.opencontainers.image.licenses="MIT"
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
