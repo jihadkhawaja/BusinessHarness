@@ -30,4 +30,4 @@ enforcement. Cloudflare DNS uses GitHub Pages' documented four A records, four A
 records, and a DNS-only `www` CNAME to `jihadkhawaja.github.io`. GitHub Pages handles
 HTTP-to-HTTPS redirection when HTTPS enforcement is enabled.
 
-Copyright (c) 2026 Jihad Khawaja. All rights reserved.
+Copyright (c) 2026 Jihad Khawaja. Licensed under the [MIT License](LICENSE).
