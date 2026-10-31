@@ -6,15 +6,15 @@
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#161c19" media="(prefers-color-scheme: dark)">
-    <meta name="description" content="BusinessHarness brings bounded AI diff review, reference validation, and optional review memory to your CI pipeline. Built with .NET. Designed for explicit control.">
+    <meta name="description" content="Connect code reviews to Jira tickets, Confluence pages, Zendesk requests, and more with AgentConnector. Bounded AI review and reference validation for your CI pipeline.">
     <link rel="canonical" href="https://businessharness.net/">
     <meta property="og:title" content="BusinessHarness — Put every change in context.">
-    <meta property="og:description" content="Review the diff. Validate the requirements. Keep the context. A .NET CLI for your existing CI pipeline.">
+    <meta property="og:description" content="Review the diff with context from Jira, Confluence, Zendesk, and more through AgentConnector. A .NET CLI for your existing CI pipeline.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://businessharness.net/">
     <meta name="twitter:card" content="summary">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/styles.css?v=1ca6e48e1360">
+    <link rel="stylesheet" href="/styles.css?v=419387fb9063">
     <script src="/site.js" defer></script>
     <title>BusinessHarness — Put every change in context.</title>
 </head>
@@ -24,7 +24,7 @@
         <a class="brand" href="/" aria-label="BusinessHarness home"><span class="brand-mark" aria-hidden="true">b<span>h</span></span>BusinessHarness<span class="brand-dot">.</span></a>
         <nav aria-label="Main navigation">
             <a href="#how-it-works">How it works</a>
-            <a href="#built-for-control">Why BusinessHarness</a>
+            <a href="#integrations">Integrations</a>
             <a href="#deployment">Deployment</a>
             <a class="nav-cta" href="#get-started">Get started <span aria-hidden="true">↗</span></a>
         </nav>
@@ -34,7 +34,7 @@
             <div class="hero-copy">
                 <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> THE CONTEXT YOUR PIPELINE IS MISSING</p>
                 <h1 id="hero-title">Put every<br>change in <span class="accent-word">context<span class="period">.</span></span></h1>
-                <p class="hero-description">Connect code changes to the requirements behind them. Bring bounded AI review, reference validation, and optional memory into the CI pipeline you already use.</p>
+                <p class="hero-description">Connect code changes to the requirements behind them, from Jira tickets to Confluence pages and Zendesk requests. Bring bounded AI review and optional memory into the CI pipeline you already use.</p>
                 <div class="hero-actions"><a class="button button-dark" href="#get-started">Start with an offline scan <span aria-hidden="true">↗</span></a><a class="text-link" href="#how-it-works">Explore the workflow <span aria-hidden="true">↓</span></a></div>
                 <p class="hero-note"><span aria-hidden="true">⊞</span> .NET &nbsp; / &nbsp; OpenAI + Claude &nbsp; / &nbsp; Your CI</p>
             </div>
@@ -70,11 +70,20 @@
             </div>
         </section>
         <section class="platforms wrap" aria-label="Supported CI platforms"><p>YOUR PIPELINE.<br><strong>NO PLATFORM SWITCH.</strong></p><div><span>GitHub Actions</span><span>GitLab CI</span><span>Azure DevOps</span><span>Bitbucket Pipelines</span></div></section>
+        <section class="integrations wrap section-space" id="integrations" aria-labelledby="integrations-title">
+            <div class="section-heading"><div><p class="eyebrow">CONNECTED REQUIREMENTS / POWERED BY AGENTCONNECTOR</p><h2 id="integrations-title">Your tickets. Your docs.<br>Part of every review.</h2></div><p>Connect Jira tickets, Confluence pages, Zendesk requests, and more with AgentConnector. Review changes against the requirements and context your team already maintains.</p></div>
+            <div class="deployment-options integration-options">
+                <article><span class="step-tag">ISSUES AND ACCEPTANCE CRITERIA</span><h3>Jira</h3><p>Discover issue keys in pull or merge request metadata. Review the change against the ticket description and configured acceptance criteria.</p></article>
+                <article><span class="step-tag">PAGES AND SPECIFICATIONS</span><h3>Confluence</h3><p>Bring configured page content into the review, so the implementation can be assessed alongside the specification your team maintains.</p></article>
+                <article><span class="step-tag">CUSTOMER REQUESTS</span><h3>Zendesk</h3><p>Connect ticket subjects and descriptions to code changes. Give the review context about the customer requirement behind a fix.</p></article>
+            </div>
+            <div class="integration-footer"><div><h3>More services. The same review flow.</h3><p>Use compatible read actions from <a href="https://github.com/jihadkhawaja/AgentConnector">AgentConnector’s provider catalog</a>, or connect your own JSON APIs. Configure the references your team needs in trusted pipeline policy.</p><p class="integration-scope">Reference integrations retrieve content for review. AI reviews use OpenAI or Claude; provider availability depends on the configured read action and response fields.</p></div><a class="text-link" href="https://github.com/jihadkhawaja/BusinessHarness/blob/main/docs/integrations.md#jira-and-other-services-through-agentconnector">Connect your services <span aria-hidden="true">↗</span></a></div>
+        </section>
         <section class="workflow wrap section-space" id="how-it-works" aria-labelledby="workflow-title">
             <div class="section-heading"><div><p class="eyebrow">01 / A MORE COMPLETE REVIEW</p><h2 id="workflow-title">The diff is only<br>part of the story.</h2></div><p>A change can look right and still miss the requirement. BusinessHarness connects the two, with explicit gates between model output and pipeline decisions.</p></div>
             <div class="steps">
                 <article><span class="step-number">01 <span aria-hidden="true">↗</span></span><h3>Scope the change</h3><p>Compare committed changes from the merge base to your head commit. Withhold sensitive files and redact recognized credential patterns.</p><span class="step-tag">BOUNDED DIFF</span></article>
-                <article><span class="step-number">02 <span aria-hidden="true">↗</span></span><h3>Bring the requirements</h3><p>Discover references in PR or MR metadata. Resolve Jira tickets and configured JSON sources through trusted routing policy.</p><span class="step-tag">REFERENCE VALIDATION</span></article>
+                <article><span class="step-number">02 <span aria-hidden="true">↗</span></span><h3>Bring the requirements</h3><p>Discover references in PR or MR metadata. Resolve Jira, Confluence, Zendesk, and other configured sources through AgentConnector read actions or JSON APIs.</p><span class="step-tag">REFERENCE VALIDATION</span></article>
                 <article><span class="step-number">03 <span aria-hidden="true">↗</span></span><h3>Review with evidence</h3><p>Use OpenAI or Claude for structured review. Validate findings against added lines and require complete reference assessments.</p><span class="step-tag">STRUCTURED OUTPUT</span></article>
                 <article><span class="step-number">04 <span aria-hidden="true">↗</span></span><h3>Make the gate explicit</h3><p>Write JSON, Markdown, and SARIF reports. Enable host feedback when you choose. Keep review history with opt-in memory.</p><span class="step-tag">YOUR POLICY</span></article>
             </div>
@@ -86,7 +95,7 @@
         <section class="deployment wrap section-space" id="deployment" aria-labelledby="deployment-title">
             <div class="section-heading"><div><p class="eyebrow">03 / DEPLOYMENT OPTIONS</p><h2 id="deployment-title">Self-managed<br>deployment.</h2></div><p>BusinessHarness supports on-premises and private cloud deployment. Organizations manage review execution, credentials, policy, report storage, and optional memory.</p></div>
             <div class="deployment-options">
-                <article><span class="step-tag">SERVERS AND VIRTUAL MACHINES</span><h3>CLI installation</h3><p>The CLI runs on organization-managed workstations, servers, and virtual machines with .NET and Git. Reviews operate against locally available Git commits.</p></article>
+                <article><span class="step-tag">SERVERS AND VIRTUAL MACHINES</span><h3>CLI installation</h3><p>The CLI runs on organization-managed workstations, servers, and virtual machines with .NET, ASP.NET Core, and Git. Reviews operate against locally available Git commits.</p></article>
                 <article><span class="step-tag">INTERNAL RUNNERS</span><h3>CI integration</h3><p>Existing pipelines can invoke reviews on isolated internal agents, with credentials supplied through approved secret stores and reports retained under organizational policy.</p></article>
                 <article><span class="step-tag">PRIVATE REGISTRIES</span><h3>Container deployment</h3><p>The supplied Dockerfile supports internally built images distributed through private registries. Deployments can be pinned to approved image digests.</p></article>
             </div>
@@ -102,10 +111,11 @@ dotnet build BusinessHarness.slnx -c Release --no-restore
 dotnet run --project src/BusinessHarness.Cli -- scan `
     --repo C:/code/my-project `
     --base origin/main --head HEAD `
-    --output artifacts/scan</code></pre><div class="code-footnote">Requires Git and .NET. Replace the repository path; fetch both commits and their common history.</div><p class="copy-status" role="status" aria-live="polite"></p></div>
+    --output artifacts/scan</code></pre><div class="code-footnote">Requires Git and .NET SDK 10.0.403, including the ASP.NET Core runtime. Replace the repository path; fetch both commits and their common history.</div><p class="copy-status" role="status" aria-live="polite"></p></div>
         </section>
         <section class="faq wrap section-space" aria-labelledby="faq-title"><div><p class="eyebrow">A FEW PRACTICAL DETAILS</p><h2 id="faq-title">Before you plug in.</h2></div><div class="faq-items">
             <details><summary>Which AI providers can I use?<span aria-hidden="true">+</span></summary><p>OpenAI’s Responses API and Claude’s Messages API, using compatible structured-output models you configure. You supply your own API credentials. A ChatGPT or Claude app subscription is not used for API access.</p></details>
+            <details><summary>Can I connect Jira and other services?<span aria-hidden="true">+</span></summary><p>Yes. Jira tickets, Confluence pages, and Zendesk requests can supply reference context through the configured integration. AgentConnector-backed GET actions and custom JSON APIs extend the available sources. Your pipeline configures credentials and content fields; BusinessHarness retrieves the reference text for review. It does not log in through OAuth, refresh tokens, or enable connector write actions. See <a href="#integrations">reference integrations</a>.</p></details>
             <details><summary>Is on-premises deployment supported?<span aria-hidden="true">+</span></summary><p>BusinessHarness supports execution on organization-managed servers, internal CI agents, and container hosts. GitHub Actions and GitHub App integrations are optional. AI reviews require connectivity to OpenAI or Claude using organization-provided credentials; the offline scan makes no provider, host, or reference API calls. See <a href="#deployment">deployment options</a>.</p></details>
             <details><summary>Does my source code leave my environment?<span aria-hidden="true">+</span></summary><p>The offline scan makes no provider, host, or reference HTTP calls. An AI review sends bounded, redacted diff context, metadata, and resolved references to your selected provider. Redaction is heuristic; review your organization’s data and retention requirements before enabling it.</p></details>
             <details><summary>Can this replace human review or tests?<span aria-hidden="true">+</span></summary><p>No. BusinessHarness supplements code review, tests, SAST, and your existing policy controls. Reference assessments are model judgments about supplied evidence, and some runtime requirements cannot be verified from a diff.</p></details>

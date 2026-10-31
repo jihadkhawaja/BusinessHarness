@@ -12,6 +12,14 @@ own credentials; only the offline scan works without provider calls. Keep these
 claims aligned with `main`'s `docs/self-hosting.md` and `SECURITY.md`. Publish the
 linked deployment guide on `main` before publishing website changes that link to it.
 
+The integrations section describes reference retrieval through the pinned
+AgentConnector dependency: Jira tickets, Confluence pages, Zendesk requests, and
+other compatible configured GET actions or JSON APIs. These sources provide text
+for review; OpenAI and Claude remain the AI review providers. Keep scope and
+setup claims aligned with `main`'s `docs/configuration.md` and `docs/integrations.md`.
+Do not imply all upstream catalog actions, write operations, or OAuth lifecycle
+management are available through BusinessHarness.
+
 ## Development
 
 No dependencies or build step are required. Serve this folder using a local static
