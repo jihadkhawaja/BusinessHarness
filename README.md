@@ -25,6 +25,8 @@ Light mode uses the original warm background; dark mode uses charcoal and green
 surfaces with brighter text and accents. Theme colors for browser chrome also
 follow the preference. Check both themes on desktop and mobile, including button
 and keyboard-focus contrast. No theme setting is stored or handled by JavaScript.
+When CSS changes, refresh the stylesheet's `v` query in `index.html` with the first
+12 characters of its SHA-256 hash so cached styles do not delay the update.
 
 `site.js` only controls tabs and clipboard interaction. The page has no analytics,
 external scripts, remote fonts, forms, tracking, or backend. Terminal output is an
