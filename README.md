@@ -19,6 +19,13 @@ HTTP server, for example `python -m http.server 4173 --bind 127.0.0.1`, and open
 http://127.0.0.1:4173/. Check desktop and narrow mobile layouts, keyboard-operated
 demo tabs, copy commands, navigation, and FAQ disclosure controls before publishing.
 
+The theme follows the system's light/dark preference through CSS
+`prefers-color-scheme` and updates automatically when that preference changes.
+Light mode uses the original warm background; dark mode uses charcoal and green
+surfaces with brighter text and accents. Theme colors for browser chrome also
+follow the preference. Check both themes on desktop and mobile, including button
+and keyboard-focus contrast. No theme setting is stored or handled by JavaScript.
+
 `site.js` only controls tabs and clipboard interaction. The page has no analytics,
 external scripts, remote fonts, forms, tracking, or backend. Terminal output is an
 illustrative example, not a live review. GitHub repository links may require access
