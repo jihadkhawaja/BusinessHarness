@@ -6,6 +6,12 @@ This standalone branch contains only public website files. The .NET application,
 contributor instructions, and full documentation remain on `main` in the same
 repository. Keep product claims and licensing text aligned with those sources.
 
+The deployment section describes self-managed CLI, internal CI, and container
+execution. AI reviews still send context to OpenAI or Claude using the company's
+own credentials; only the offline scan works without provider calls. Keep these
+claims aligned with `main`'s `docs/self-hosting.md` and `SECURITY.md`. Publish the
+linked deployment guide on `main` before publishing website changes that link to it.
+
 ## Development
 
 No dependencies or build step are required. Serve this folder using a local static
