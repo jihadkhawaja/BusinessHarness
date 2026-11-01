@@ -8,7 +8,7 @@
       "businessharness.application": {
         "type": "Project",
         "dependencies": {
-          "BusinessHarness.Core": "[0.1.5, )"
+          "BusinessHarness.Core": "[0.1.6, )"
         }
       },
       "businessharness.core": {
@@ -17,8 +17,8 @@
       "businessharness.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "AgentConnector": "[0.1.5, )",
-          "BusinessHarness.Application": "[0.1.5, )",
+          "AgentConnector": "[0.1.6, )",
+          "BusinessHarness.Application": "[0.1.6, )",
           "MagiCore": "[1.0.0, )"
         }
       },

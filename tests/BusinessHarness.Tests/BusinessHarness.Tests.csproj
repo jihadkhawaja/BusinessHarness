@@ -10,5 +10,6 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <ProjectReference Include="../../src/BusinessHarness.Cli/BusinessHarness.Cli.csproj" />
+    <ProjectReference Include="../../src/BusinessHarness.Desktop/BusinessHarness.Desktop.csproj" />
   </ItemGroup>
 </Project>

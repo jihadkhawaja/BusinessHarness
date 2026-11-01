@@ -1,5 +1,29 @@
 # Security model
 
+The separate [desktop chat workspace](docs/desktop.md) reads only explicitly
+selected trusted connection policy. Models receive bounded, redacted chat history
+and selected attachments, with no tools or host writes. Chat is advisory and cannot
+establish a passing review gate. Credentials come from environment variables, masked input, an explicitly selected
+bounded credentials file, or optional user-saved encrypted desktop settings. This includes an explicitly
+provisioned ChatGPT plan access token when selected; no third-party session files
+are discovered or read. Chat history and attachments stay in process
+memory. Optional saved settings use AES-256-GCM with a random key protected by
+Windows DPAPI CurrentUser, macOS Keychain or Linux Secret Service. They are
+stored outside the checkout, authenticated before replacement and fail closed if
+the user vault or integrity check fails; no plaintext fallback is enabled. Other
+processes running as the same unlocked OS user may access that user's vault.
+Confluence HTML and model responses are rendered as plain text. Existing
+reference routing, Git isolation and HTTP restrictions also apply to desktop reads.
+
+The desktop's personal Atlassian connection keeps the site, account email and API
+token in process memory and can optionally save them in encrypted user settings. It validates a fixed HTTPS `*.atlassian.net` tenant and
+sends Basic authentication only to that tenant's fixed Jira and Confluence read
+routes. It redacts the email, token and encoded authorization value from provider
+context. Disconnect removes the active connection; known credentials remain in a
+bounded in-memory redaction set until app exit to protect earlier chat history.
+No local credential file is discovered automatically. Token permissions belong to
+the Atlassian account; direct integration requires the user's explicit selection.
+
 AgentConnector is pinned source at `external/AgentConnector`. BusinessHarness uses
 its catalog and request builder for native Jira and explicitly configured
 reference GET actions. Connector write/body actions and proxies are rejected

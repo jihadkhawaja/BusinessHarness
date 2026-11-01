@@ -30,6 +30,8 @@ BenchmarkDotNet.Artifacts/
 harness-results/
 
 # Local environment and publishing secrets (keep example configuration)
+.credentials
+.credentials.*
 .env
 .env.*
 !.env.example

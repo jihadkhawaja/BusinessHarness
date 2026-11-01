@@ -8,8 +8,10 @@ other named GET actions. The CLI validates all configured connector requests
 before network access. Only captured identifiers enter the selected parameter;
 actions, fixed inputs and destinations come from trusted policy. BusinessHarness
 retains authentication, bounded HTTP, redaction, extraction and reference gates.
-No connector server, OAuth lifecycle, credential store, proxy or write action is
-enabled. The compiled library requires the ASP.NET Core 10 shared runtime.
+The CLI and desktop enable no connector server, OAuth lifecycle, credential store,
+proxy or write action. Desktop personal connections send explicitly supplied
+credentials to fixed read-only Jira/Confluence routes. The compiled library
+requires the ASP.NET Core 10 shared runtime.
 
 Trusted policy can define a bounded `skillBank` and `enabledSkills`. Invocation
 `--skills` overrides the enabled names. The provider contract redacts and inserts
@@ -34,6 +36,7 @@ flowchart LR
 | BusinessHarness.Application | Review use case, result validation, IChangeSource/IReviewProvider/IReferenceResolver/IChangeRequestHost/IIssueSource/IReportWriter/IReviewMemory |
 | BusinessHarness.Infrastructure | Git subprocess isolation, redaction, provider REST adapters, Jira ADF conversion, configured JSON reference routing, GitHub/GitLab metadata and feedback, report persistence |
 | BusinessHarness.Cli | Explicit option/config binding, manual dependency injection, cancellation, safe diagnostics, process exit |
+| BusinessHarness.Desktop | Avalonia UI, trusted connections, in-memory chat, context selection and cancellation; composes Infrastructure/Application |
 | BusinessHarness.Tests | Application, architecture, security, HTTP-contract, CLI and real temporary-Git tests |
 
 The composition root constructs long-lived HTTP resources for one invocation and passes them through interfaces. Application code depends on abstractions, not HTTP or Git implementations. `TimeProvider` makes time an explicit dependency. All I/O is async where supported, accepts cancellation, and owns/disposes its resources. Nullable annotations, strict JSON binding, current analyzers, deterministic builds, warnings-as-errors, lock files and centralized package versions apply repository-wide.

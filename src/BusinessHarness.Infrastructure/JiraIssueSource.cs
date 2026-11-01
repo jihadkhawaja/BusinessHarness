@@ -50,7 +50,11 @@ public sealed partial class JiraIssueSource : IIssueSource
         request.Headers.Authorization = authorization;
         request.Headers.Accept.Add(new("application/json"));
         using var body = await http.SendAsync(request, "Jira", cancellationToken);
-        var root = body.RootElement;
+        return ReadDocument(body.RootElement, key, acceptanceField, redactor);
+    }
+
+    public static ReferenceDocument ReadDocument(JsonElement root, string key, string? acceptanceField, SecretRedactor redactor)
+    {
         if (ApiJson.String(root, "key") != key ||
             !root.TryGetProperty("fields", out var data) || data.ValueKind != JsonValueKind.Object || !data.TryGetProperty("summary", out var summary) ||
             summary.ValueKind != JsonValueKind.String)

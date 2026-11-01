@@ -91,6 +91,13 @@ and [exit codes](docs/errors.md).
 
 ## Quick start
 
+Prefer a chat window? [BusinessHarness Desktop](docs/desktop.md) is a separate
+Avalonia 12.1.4 / .NET 10 app for Windows, macOS and Linux. Chat with OpenAI or
+Anthropic API credentials, or a provisioned ChatGPT plan access token, and attach
+configured PRs, Jira tickets, Confluence pages and local committed diffs. Chat is
+advisory; CLI review remains the validated CI gate. Browser subscription sign-in,
+CLI subscription sessions and host/document editing are not implemented.
+
 Requires .NET and ASP.NET Core 10.0.14 or newer within .NET 10, plus Git.
 SDK 10.0.403 includes both runtimes; the container bundles them. Install the latest stable release:
 

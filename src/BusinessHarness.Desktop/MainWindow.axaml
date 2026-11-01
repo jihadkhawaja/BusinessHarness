@@ -1,0 +1,230 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BusinessHarness.Desktop.MainWindow" Title="BusinessHarness" Icon="avares://BusinessHarness.Desktop/Assets/icon.png"
+        Width="1180" Height="800" MinWidth="720" MinHeight="580" Background="#212121" KeyDown="Window_KeyDown">
+  <Grid>
+    <!-- Main layout: sidebar + chat -->
+    <Grid x:Name="MainSurface" ColumnDefinitions="Auto,*">
+
+      <!-- Sidebar -->
+      <Border x:Name="Sidebar" Width="220" Background="#171717" Padding="16,20">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="8,0,0,24">
+            <Image Source="avares://BusinessHarness.Desktop/Assets/icon.png" Width="32" Height="32" />
+            <TextBlock Text="BusinessHarness" FontSize="15" FontWeight="SemiBold" Foreground="#E0E0E0" VerticalAlignment="Center" />
+          </StackPanel>
+          <Button Grid.Row="1" Content="＋  New chat" Click="NewChat_Click" HorizontalAlignment="Stretch" Classes="quiet" HorizontalContentAlignment="Left" Foreground="#E0E0E0" />
+
+          <!-- Bottom section -->
+          <StackPanel Grid.Row="3" Spacing="4" Margin="0,0,0,4">
+            <Button x:Name="ConnectionsButton" Content="⚙  Settings" Click="OpenConnections_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Foreground="#B0B0B0" FontSize="13" />
+            <TextBlock x:Name="SidebarStatus" Text="Set up your AI to begin" Foreground="#666666" FontSize="11" Margin="14,0,0,4" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Chat area -->
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+
+        <!-- Top bar -->
+        <Border Background="#212121" Padding="12,10,16,8">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Button Content="☰" Click="ToggleSidebar_Click" Classes="quiet icon" Foreground="#B0B0B0" ToolTip.Tip="Toggle sidebar" AutomationProperties.Name="Toggle sidebar" />
+            <Button x:Name="ModelButton" Grid.Column="1" Content="BusinessHarness ⌄" Click="OpenConnections_Click" Classes="quiet" HorizontalAlignment="Left" FontSize="15" FontWeight="Medium" Foreground="#E0E0E0" />
+            <Button Grid.Column="2" Content="＋" Click="NewChat_Click" Classes="quiet icon" Foreground="#B0B0B0" ToolTip.Tip="New chat" AutomationProperties.Name="New chat" />
+          </Grid>
+        </Border>
+
+        <!-- Conversation area -->
+        <Grid Grid.Row="1" Margin="0">
+          <!-- Welcome screen -->
+          <StackPanel x:Name="WelcomePanel" Spacing="20" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="580" Margin="24,0,24,40">
+            <TextBlock Text="What can I help with?" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#E8E8E8" />
+            <WrapPanel HorizontalAlignment="Center" Margin="0,8,0,0">
+              <Button Content="Summarize a ticket" Click="SuggestSummary_Click" Classes="suggestion" Margin="4" />
+              <Button Content="Review a change" Click="SuggestGaps_Click" Classes="suggestion" Margin="4" />
+              <Button Content="Draft a reply" Click="SuggestDraft_Click" Classes="suggestion" Margin="4" />
+            </WrapPanel>
+          </StackPanel>
+
+          <!-- Messages -->
+          <ScrollViewer x:Name="ConversationScroll" HorizontalScrollBarVisibility="Disabled" IsVisible="False">
+            <StackPanel x:Name="ConversationPanel" Spacing="4" MaxWidth="760" Margin="24,20,24,24" HorizontalAlignment="Center" />
+          </ScrollViewer>
+        </Grid>
+
+        <!-- Input area -->
+        <StackPanel Grid.Row="2" Spacing="6" MaxWidth="760" HorizontalAlignment="Stretch" Margin="24,0,24,16">
+          <TextBlock x:Name="StatusLabel" IsVisible="False" TextWrapping="Wrap" Foreground="#B0B0B0" FontSize="12" Margin="12,0" AutomationProperties.LiveSetting="Polite" />
+          <Border Background="#2F2F2F" CornerRadius="24" Padding="6,6">
+            <StackPanel Spacing="4">
+              <WrapPanel x:Name="AttachmentChips" IsVisible="False" Margin="10,4,10,0" />
+              <TextBox x:Name="PromptBox" PlaceholderText="Ask anything about your work…" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="160" MaxLength="32000" Background="Transparent" BorderThickness="0" Padding="14,8" KeyDown="Prompt_KeyDown" AutomationProperties.Name="Chat message" />
+              <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="4,0,4,2">
+                <Button x:Name="AttachButton" Content="📎" Click="OpenContext_Click" Classes="quiet icon" FontSize="16" Foreground="#9E9E9E" ToolTip.Tip="Attach context" AutomationProperties.Name="Add context" />
+                <ProgressBar x:Name="BusyIndicator" Grid.Column="1" IsIndeterminate="True" IsVisible="False" Height="2" MaxWidth="120" VerticalAlignment="Center" />
+                <Button x:Name="CancelButton" Grid.Column="2" Content="■" Click="Cancel_Click" IsVisible="False" Classes="round" ToolTip.Tip="Stop" AutomationProperties.Name="Stop reply" />
+                <Button x:Name="SendButton" Grid.Column="3" Content="↑" Click="Send_Click" Classes="round" FontSize="18" ToolTip.Tip="Send" AutomationProperties.Name="Send message" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <TextBlock Text="Enter to send · Shift + Enter for a new line" Classes="hint" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- Full-page settings -->
+    <Border x:Name="SettingsPage" Background="#212121" IsVisible="False" KeyboardNavigation.TabNavigation="Cycle">
+      <Grid RowDefinitions="Auto,*">
+        <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="24,12">
+          <Grid ColumnDefinitions="*,Auto">
+            <Button x:Name="SettingsBackButton" Content="←  Back to chat" Click="CloseConnections_Click" Classes="quiet" HorizontalAlignment="Left" Foreground="#C8C8C8" />
+            <Button x:Name="SettingsCancelButton" Grid.Column="1" Content="Stop" Click="Cancel_Click" IsVisible="False" Classes="quiet" />
+          </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="680" Margin="32,32,32,48" HorizontalAlignment="Stretch" Spacing="32">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Settings" FontSize="30" FontWeight="SemiBold" Foreground="#ECECEC" />
+              <Button x:Name="SaveSettingsButton" Grid.Column="1" Content="Save settings" Click="SaveSettings_Click" Classes="primary" VerticalAlignment="Center" />
+            </Grid>
+            <TextBlock Text="Save connections securely for this OS user." Classes="muted" TextWrapping="Wrap" />
+            <Button x:Name="ForgetSettingsButton" Content="Forget saved settings" Click="ForgetSettings_Click" Classes="quiet" HorizontalAlignment="Left" />
+            <TextBlock x:Name="SettingsStatus" IsVisible="False" TextWrapping="Wrap" Foreground="#B8D8CA" FontSize="13" AutomationProperties.LiveSetting="Polite" />
+
+            <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="0,0,0,32">
+              <StackPanel Spacing="16">
+                <TextBlock Text="AI provider" FontSize="17" FontWeight="SemiBold" Foreground="#ECECEC" />
+                <StackPanel Orientation="Horizontal" Spacing="24">
+                  <RadioButton x:Name="AccountMode" Content="Account" GroupName="AiAccess" IsChecked="True" IsCheckedChanged="AccessMode_Changed" />
+                  <RadioButton x:Name="TokenMode" Content="API key / token" GroupName="AiAccess" IsCheckedChanged="AccessMode_Changed" />
+                </StackPanel>
+                <StackPanel x:Name="AccountOptions" Spacing="12">
+                  <TextBlock Text="Sign in with your AI account" FontSize="14" Foreground="#E0E0E0" />
+                  <WrapPanel>
+                    <Button Content="Continue with ChatGPT" Classes="primary" IsEnabled="False" Margin="0,0,8,8" />
+                    <Button Content="Continue with Claude" IsEnabled="False" Margin="0,0,0,8" />
+                  </WrapPanel>
+                  <TextBlock Text="Account sign-in is not available yet. Choose API key / token to connect now." Classes="muted" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel x:Name="TokenOptions" Spacing="16" IsVisible="False">
+                <Grid ColumnDefinitions="*,*">
+                  <StackPanel Spacing="8" Margin="0,0,8,0">
+                    <TextBlock Text="Provider" Classes="muted" />
+                    <ComboBox x:Name="ProviderBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="ProviderBox_SelectionChanged" AutomationProperties.Name="AI provider">
+                      <ComboBoxItem Content="OpenAI" /><ComboBoxItem Content="Anthropic" /><ComboBoxItem Content="ChatGPT plan token" />
+                    </ComboBox>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Spacing="8" Margin="8,0,0,0">
+                    <TextBlock Text="Model" Classes="muted" />
+                    <TextBox x:Name="ModelBox" PlaceholderText="Model name" MaxLength="120" AutomationProperties.Name="Model" />
+                  </StackPanel>
+                </Grid>
+                <StackPanel Spacing="8">
+                  <TextBlock Text="API key or plan access token" Classes="muted" />
+                  <TextBox x:Name="CredentialBox" PlaceholderText="Paste your credential" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="Provider credential" />
+                </StackPanel>
+                <Grid ColumnDefinitions="Auto,Auto,*">
+                  <Button x:Name="ConnectButton" Content="Connect" Click="Connect_Click" Classes="primary" Padding="24,10" />
+                  <Button Grid.Column="1" Content="Import file…" Click="ImportCredentials_Click" Classes="quiet" Margin="8,0,0,0" />
+                </Grid>
+                </StackPanel>
+                <TextBlock x:Name="AiStatus" Text="Not connected" Classes="muted" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="16">
+              <TextBlock Text="Connected apps" FontSize="17" FontWeight="SemiBold" Foreground="#ECECEC" />
+              <Button x:Name="AddAppButton" Click="ToggleAppPicker_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="18" Background="#2A2A2A" CornerRadius="14">
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                  <Border Width="42" Height="42" Background="#393939" CornerRadius="12"><TextBlock Text="＋" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                  <StackPanel VerticalAlignment="Center" Spacing="2"><TextBlock Text="Add an app" FontWeight="SemiBold" /><TextBlock Text="Choose a service to connect" Classes="muted" /></StackPanel>
+                </StackPanel>
+              </Button>
+              <StackPanel x:Name="AppPicker" IsVisible="False" Spacing="6">
+                <Button Click="SelectJira_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#1657C0" Width="34" Height="34" CornerRadius="9"><TextBlock Text="J" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Jira &amp; Confluence" VerticalAlignment="Center" /></StackPanel></Button>
+                <Button Click="SelectGitHub_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#515151" Width="34" Height="34" CornerRadius="9"><TextBlock Text="GH" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="GitHub" VerticalAlignment="Center" /></StackPanel></Button>
+                <Button Click="SelectGitLab_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#AD5129" Width="34" Height="34" CornerRadius="9"><TextBlock Text="GL" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="GitLab" VerticalAlignment="Center" /></StackPanel></Button>
+                <Button Click="SelectPolicy_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#495249" Width="34" Height="34" CornerRadius="9"><TextBlock Text="≡" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Trusted policy" VerticalAlignment="Center" /></StackPanel></Button>
+              </StackPanel>
+              <Border x:Name="JiraDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20">
+                <StackPanel Spacing="12">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="4"><TextBlock Text="Jira &amp; Confluence" FontWeight="SemiBold" /><TextBlock x:Name="JiraStatus" Text="Not connected" Classes="muted" TextWrapping="Wrap" /></StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <Button x:Name="JiraConnectButton" Content="Connect" Click="ConnectJira_Click" Classes="primary" />
+                      <Button x:Name="JiraDisconnectButton" Content="Disconnect" Click="DisconnectJira_Click" Classes="quiet" IsVisible="False" />
+                    </StackPanel>
+                  </Grid>
+                  <StackPanel x:Name="JiraInputs" Spacing="10">
+                    <TextBox x:Name="JiraSiteBox" PlaceholderText="https://your-site.atlassian.net/" AutomationProperties.Name="Jira Cloud site" />
+                    <TextBox x:Name="JiraEmailBox" PlaceholderText="Atlassian account email" MaxLength="320" AutomationProperties.Name="Atlassian email" />
+                    <TextBox x:Name="JiraTokenBox" PlaceholderText="Atlassian API token" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="Atlassian API token" />
+                    <TextBlock Text="Use an API token, not your password. Save settings to keep this connection." Classes="muted" TextWrapping="Wrap" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border x:Name="GitHubDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="GitHub" FontWeight="SemiBold" /><TextBlock Text="Read-only access token" Classes="muted" /><TextBox x:Name="HostTokenBox" PlaceholderText="GitHub token" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="GitHub token" /><Button x:Name="GitHubSaveButton" Content="Use token" Click="SaveGitHub_Click" Classes="primary" HorizontalAlignment="Left" /><TextBlock x:Name="GitHubStatus" Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
+              <Border x:Name="GitLabDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="GitLab" FontWeight="SemiBold" /><TextBlock Text="Read-only access token" Classes="muted" /><TextBox x:Name="GitLabTokenBox" PlaceholderText="GitLab token" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="GitLab token" /><Button x:Name="GitLabSaveButton" Content="Use token" Click="SaveGitLab_Click" Classes="primary" HorizontalAlignment="Left" /><TextBlock x:Name="GitLabStatus" Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
+              <Border x:Name="PolicyDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="Trusted policy" FontWeight="SemiBold" /><TextBox x:Name="PolicyBox" PlaceholderText="Optional JSON file" AutomationProperties.Name="Trusted policy path" /><Button Content="Browse…" Click="ChoosePolicy_Click" Classes="quiet" HorizontalAlignment="Left" /><TextBlock Text="Apply your policy using the AI provider Connect button." Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+
+    <!-- Add context modal -->
+    <Border x:Name="ContextOverlay" Background="#66000000" IsVisible="False" PointerPressed="Overlay_PointerPressed">
+      <Border Background="#1E1E1E" CornerRadius="16" Padding="24" Width="520" MaxWidth="520" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center" KeyboardNavigation.TabNavigation="Cycle">
+        <Grid RowDefinitions="Auto,Auto,*">
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,14">
+            <TextBlock Text="Add context" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#E8E8E8" />
+            <Button x:Name="ContextCancelButton" Grid.Column="1" Content="Stop" Click="Cancel_Click" IsVisible="False" Classes="quiet" />
+            <Button Grid.Column="2" Content="×" Click="CloseContext_Click" Classes="quiet icon" Foreground="#9E9E9E" AutomationProperties.Name="Close" />
+          </Grid>
+          <TextBlock x:Name="ContextStatus" Grid.Row="1" IsVisible="False" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,10" AutomationProperties.LiveSetting="Polite" />
+          <TabControl Grid.Row="2">
+            <TabItem Header="Ticket / Page">
+              <StackPanel Spacing="12" Margin="0,14,0,0">
+                <ComboBox x:Name="ReferenceKindBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="ReferenceKindBox_SelectionChanged" AutomationProperties.Name="Item type">
+                  <ComboBoxItem Content="Jira ticket" /><ComboBoxItem Content="Confluence page" /><ComboBoxItem Content="From policy" />
+                </ComboBox>
+                <TextBox x:Name="ReferenceBox" PlaceholderText="Ticket key (e.g. PROJ-123)" MaxLength="6000" AutomationProperties.Name="Ticket key or page ID" />
+                <Button x:Name="ReferencesButton" Content="Add to chat" Click="LoadReferences_Click" Classes="primary" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              </StackPanel>
+            </TabItem>
+            <TabItem Header="Pull Request">
+              <StackPanel Spacing="12" Margin="0,14,0,0">
+                <TextBox x:Name="PrUrlBox" PlaceholderText="GitHub or GitLab PR URL" MaxLength="2000" AutomationProperties.Name="Pull request URL" />
+                <Button x:Name="PrButton" Content="Add pull request" Click="LoadPr_Click" Classes="primary" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              </StackPanel>
+            </TabItem>
+            <TabItem Header="Local Diff">
+              <StackPanel Spacing="10" Margin="0,14,0,0">
+                <TextBox x:Name="RepositoryBox" PlaceholderText="Repository folder" AutomationProperties.Name="Repository folder" />
+                <Button Content="Browse…" Click="ChooseRepository_Click" Classes="quiet" Foreground="#9E9E9E" FontSize="12" HorizontalAlignment="Left" Padding="8,4" />
+                <Grid ColumnDefinitions="*,*" Margin="0,2,0,0">
+                  <TextBox x:Name="BaseBox" Text="origin/main" Margin="0,0,4,0" AutomationProperties.Name="Base ref" />
+                  <TextBox x:Name="HeadBox" Grid.Column="1" Text="HEAD" Margin="4,0,0,0" AutomationProperties.Name="Head ref" />
+                </Grid>
+                <Button x:Name="DiffButton" Content="Add diff" Click="LoadDiff_Click" Classes="primary" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              </StackPanel>
+            </TabItem>
+          </TabControl>
+        </Grid>
+      </Border>
+    </Border>
+    <Border x:Name="NoticeOverlay" Background="#99000000" IsVisible="False" KeyboardNavigation.TabNavigation="Cycle">
+      <Border Background="#2A2A2A" CornerRadius="16" Padding="24" MaxWidth="460" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock x:Name="NoticeTitle" Text="Something went wrong" FontSize="19" FontWeight="SemiBold" />
+          <TextBlock x:Name="NoticeMessage" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button x:Name="NoticeCancelButton" Content="Cancel" Click="DismissNotice_Click" Classes="quiet" IsVisible="False" />
+            <Button x:Name="NoticeConfirmButton" Content="OK" Click="ConfirmNotice_Click" Classes="primary" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+  </Grid>
+</Window>

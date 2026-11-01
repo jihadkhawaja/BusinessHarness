@@ -1,0 +1,27 @@
+{
+  "provider": "openai",
+  "model": "YOUR_AVAILABLE_MODEL",
+  "changeRequest": {
+    "platform": "github",
+    "project": "YOUR_ORG/YOUR_REPO",
+    "number": 1,
+    "tokenEnvironment": "GITHUB_TOKEN"
+  },
+  "jiraSite": "https://your-team.atlassian.net",
+  "referenceSources": [
+    {
+      "name": "confluence",
+      "pattern": "https://your-team\\.atlassian\\.net/wiki/spaces/[A-Za-z0-9_-]+/pages/(?<id>[1-9][0-9]*)",
+      "connector": {
+        "action": "confluence.get_page",
+        "idParameter": "page_id",
+        "baseUri": "https://your-team.atlassian.net/",
+        "inputs": { "body_format": "storage" }
+      },
+      "titlePath": "title",
+      "contentPath": "body.storage.value",
+      "tokenEnvironment": "CONFLUENCE_BASIC_AUTH",
+      "authenticationScheme": "Basic"
+    }
+  ]
+}
