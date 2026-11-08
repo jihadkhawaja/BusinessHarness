@@ -22,9 +22,10 @@ for the affected public contract.
 | `scripts` | Verification, offline smoke tests and deliberate dependency maintenance |
 | `external/MAGICore` | Pinned upstream Git submodule; do not edit its checkout for local fixes |
 | `external/AgentConnector` | Pinned upstream connector submodule; adapt builds in root MSBuild files, do not edit its checkout |
+| `external/AgentSpace` | Pinned upstream workspace runtime; adapt builds in root MSBuild files, do not edit its checkout |
 
 Keep dependencies pointing inward. Core and Application must remain independent
-of HTTP/Git implementations, MAGICore and AgentConnector. Adapt upstream builds through the
+of HTTP/Git implementations, MAGICore, AgentConnector and AgentSpace. Adapt upstream builds through the
 existing root MSBuild files; update the submodule only for an explicit dependency
 change. Preserve licensing and third-party notices.
 
@@ -93,6 +94,10 @@ these unrelated branch histories or put application source in the published site
 - Review providers receive bounded, redacted context and no tools, filesystem,
   shell, unrestricted URL fetching or host write credentials. Withhold sensitive
   paths. Never log raw HTTP bodies, credentials, raw diffs or memory snapshots.
+- AgentSpace permits only the host-registered review command, with tenant and
+  agent IDs and evidence grants from trusted CLI policy. Keep workspace state
+  separate from the checkout and reports. Denied evidence must fail the review
+  before provider dispatch.
 - Keep Git subprocesses shell-free with argument lists, commit-resolved refs,
   literal pathspecs, disabled external drivers/configuration and the restricted
   environment. Treat Git metadata and the installed binary as trusted prerequisites.
@@ -149,7 +154,7 @@ when the changed behavior is ready:
 dotnet restore BusinessHarness.slnx --locked-mode
 dotnet build BusinessHarness.slnx -c Release --no-restore
 dotnet test --solution BusinessHarness.slnx -c Release --no-build
-dotnet format BusinessHarness.slnx --verify-no-changes --no-restore --exclude external/MAGICore external/AgentConnector
+dotnet format BusinessHarness.slnx --verify-no-changes --no-restore --exclude external/MAGICore external/AgentConnector external/AgentSpace
 ```
 
 For Docker/runtime image changes, build and smoke-test the container as well:

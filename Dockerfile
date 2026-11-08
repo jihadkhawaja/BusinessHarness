@@ -5,6 +5,10 @@ COPY global.json Directory.Build.props Directory.Build.targets Directory.Package
 COPY locks/ locks/
 COPY external/MAGICore/ external/MAGICore/
 COPY external/AgentConnector/ external/AgentConnector/
+COPY external/AgentSpace/Directory.Build.props external/AgentSpace/
+COPY external/AgentSpace/src/AgentSpace.Application/ external/AgentSpace/src/AgentSpace.Application/
+COPY external/AgentSpace/src/AgentSpace.Domain/ external/AgentSpace/src/AgentSpace.Domain/
+COPY external/AgentSpace/src/AgentSpace.Infrastructure/ external/AgentSpace/src/AgentSpace.Infrastructure/
 COPY src/ src/
 COPY README.md LICENSE ./
 RUN dotnet restore src/BusinessHarness.Cli/BusinessHarness.Cli.csproj --locked-mode --configfile NuGet.Config
@@ -20,6 +24,7 @@ COPY --from=build /app/ ./
 COPY LICENSE ./
 COPY external/MAGICore/LICENSE ./licenses/MAGICore/LICENSE
 COPY external/AgentConnector/LICENSE ./licenses/AgentConnector/LICENSE
+COPY external/AgentSpace/LICENSE ./licenses/AgentSpace/LICENSE
 USER $APP_UID
 ENTRYPOINT ["dotnet", "/app/BusinessHarness.Cli.dll"]
 CMD ["--help"]

@@ -16,9 +16,13 @@ public sealed partial class MainWindow : Window
 {
     private readonly HttpClient client = SafeHttp.CreateClient();
     private readonly Dictionary<string, string> sessionSecrets = new(StringComparer.Ordinal);
+    private string? directJiraToken;
     private readonly DesktopWorkspace workspace;
     private readonly DesktopSettingsStore settingsStore;
     private readonly List<ChatAttachment> attachments = [];
+    private IReadOnlyList<DesktopConnectorInfo> catalogProviders = [];
+    private IReadOnlyList<DesktopConnectorAction> catalogActions = [];
+    private readonly Dictionary<string, TextBox> catalogInputs = new(StringComparer.Ordinal);
     private ChatSession? session;
     private CancellationTokenSource? operation;
     private bool plan;
@@ -49,6 +53,8 @@ public sealed partial class MainWindow : Window
         ModelBox.Text = !string.IsNullOrWhiteSpace(envModel) ? envModel : (ProviderBox.SelectedIndex == 1 ? "claude-3-7-sonnet-20250219" : "gpt-4o");
 
         UpdateJiraUi();
+        catalogProviders = DesktopConnectorCatalog.Providers();
+        CatalogProviderBox.ItemsSource = catalogProviders.Select(p => p.Name).ToArray();
         SizeChanged += (_, _) => { if (Width < 900) Sidebar.IsVisible = false; };
         Closed += (_, _) => { operation?.Cancel(); client.Dispose(); };
     }
@@ -142,7 +148,7 @@ public sealed partial class MainWindow : Window
     private void SelectApp(Control selected)
     {
         AppPicker.IsVisible = false;
-        foreach (var detail in new Control[] { JiraDetails, GitHubDetails, GitLabDetails, PolicyDetails })
+        foreach (var detail in new Control[] { JiraDetails, GitHubDetails, GitLabDetails, CatalogDetails, PolicyDetails })
             detail.IsVisible = ReferenceEquals(detail, selected);
     }
 
@@ -150,6 +156,84 @@ public sealed partial class MainWindow : Window
     private void SelectGitHub_Click(object? sender, RoutedEventArgs e) => SelectApp(GitHubDetails);
     private void SelectGitLab_Click(object? sender, RoutedEventArgs e) => SelectApp(GitLabDetails);
     private void SelectPolicy_Click(object? sender, RoutedEventArgs e) => SelectApp(PolicyDetails);
+    private void SelectCatalog_Click(object? sender, RoutedEventArgs e) => SelectApp(CatalogDetails);
+
+    private DesktopConnectorInfo? SelectedCatalogProvider() => CatalogProviderBox.SelectedIndex >= 0 && CatalogProviderBox.SelectedIndex < catalogProviders.Count
+        ? catalogProviders[CatalogProviderBox.SelectedIndex] : null;
+
+    private void CatalogProvider_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (CatalogConnectionFields is null || CatalogProviderBox is null || CatalogStatus is null || workspace is null) return;
+        var selected = SelectedCatalogProvider();
+        CatalogCredentialBox.Text = "";
+        CatalogBaseBox.Text = "";
+        CatalogParametersPanel.Children.Clear();
+        catalogInputs.Clear();
+        if (selected is null) { CatalogConnectionFields.IsVisible = false; CatalogReadFields.IsVisible = false; return; }
+        CatalogConnectionFields.IsVisible = selected.HasReadActions;
+        CatalogBaseBox.IsVisible = selected.RequiresBase;
+        CatalogBaseBox.PlaceholderText = selected.Id == "shopify" ? "https://your-store.myshopify.com/" : "Your app's HTTPS API base URL";
+        CatalogCredentialHint.Text = selected.CredentialDescription;
+        CatalogCredentialBox.IsVisible = selected.RequiresCredential;
+        var connected = workspace.ConnectorSettings.TryGetValue(selected.Id, out var existing);
+        CatalogStatus.Text = !selected.HasReadActions ? "No supported read actions for this app yet." : connected
+            ? selected.RequiresBase ? $"Active API: {existing!.BaseUri}" : $"Active app: {selected.Name}"
+            : "Not connected";
+        if (connected) CatalogBaseBox.Text = existing!.BaseUri;
+        catalogActions = DesktopConnectorCatalog.Actions(selected.Id);
+        CatalogActionBox.SelectedIndex = -1;
+        CatalogActionBox.ItemsSource = catalogActions.Select(a => a.Name).ToArray();
+        CatalogActionBox.SelectedIndex = catalogActions.Count == 1 ? 0 : -1;
+        CatalogReadFields.IsVisible = selected.HasReadActions && workspace.HasCatalogApp(selected.Id);
+    }
+
+    private void CatalogAction_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (CatalogParametersPanel is null || CatalogActionBox is null) return;
+        CatalogParametersPanel.Children.Clear();
+        catalogInputs.Clear();
+        if (CatalogActionBox.SelectedIndex < 0 || CatalogActionBox.SelectedIndex >= catalogActions.Count) return;
+        foreach (var parameter in catalogActions[CatalogActionBox.SelectedIndex].Parameters)
+        {
+            var label = parameter.Name.Replace('_', ' ');
+            var suffix = parameter.Example is not null ? $" (e.g. {parameter.Example})" : parameter.Required ? " (required)" : " (optional)";
+            var input = new TextBox { PlaceholderText = label + suffix, MaxLength = 2000 };
+            ToolTip.SetTip(input, parameter.Kind);
+            Avalonia.Automation.AutomationProperties.SetName(input, label);
+            catalogInputs.Add(parameter.Name, input);
+            CatalogParametersPanel.Children.Add(input);
+        }
+    }
+
+    private void CatalogConnect_Click(object? sender, RoutedEventArgs e)
+    {
+        if (operation is not null || SelectedCatalogProvider() is not { } selected) return;
+        try
+        {
+            workspace.ConnectCatalogApp(selected.Id, new(CatalogBaseBox.Text?.Trim() ?? "", CatalogCredentialBox.Text?.Trim() ?? ""));
+            CatalogCredentialBox.Text = "";
+            CatalogStatus.Text = selected.RequiresBase ? $"Active API: {CatalogBaseBox.Text?.Trim()}" : $"Active app: {selected.Name}";
+            CatalogReadFields.IsVisible = true;
+        }
+        catch (HarnessException ex) { ShowFailure(ex); }
+    }
+
+    private async void CatalogAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        if (SelectedCatalogProvider() is not { } selected || CatalogActionBox.SelectedIndex < 0 || CatalogActionBox.SelectedIndex >= catalogActions.Count) return;
+        workspace.ConnectorSettings.TryGetValue(selected.Id, out var applied);
+        try { DesktopSettingsDraft.EnsureCatalogApplied(applied, selected.RequiresBase, CatalogBaseBox.Text, CatalogCredentialBox.Text); }
+        catch (HarnessException ex) { ShowFailure(ex); return; }
+        var action = catalogActions[CatalogActionBox.SelectedIndex];
+        var values = catalogInputs.Where(p => !string.IsNullOrWhiteSpace(p.Value.Text))
+            .ToDictionary(p => p.Key, p => p.Value.Text!.Trim(), StringComparer.Ordinal);
+        await RunAsync(async ct =>
+        {
+            AddAttachments([await workspace.ReadCatalogAppAsync(selected.Id, action.Id, values, ct)]);
+            CloseOverlays();
+            SetStatus("Added to chat.");
+        });
+    }
 
     private void UpdateRedaction() => workspace.UpdateConnectionSecrets(sessionSecrets.Values);
 
@@ -177,7 +261,7 @@ public sealed partial class MainWindow : Window
         {
             var token = JiraTokenBox.Text?.Trim() ?? "";
             workspace.ConnectAtlassian(JiraSiteBox.Text?.Trim() ?? "", JiraEmailBox.Text?.Trim() ?? "", token);
-            sessionSecrets["JIRA_API_TOKEN"] = token;
+            directJiraToken = token;
             JiraTokenBox.Text = "";
             UpdateJiraUi();
         }
@@ -188,7 +272,7 @@ public sealed partial class MainWindow : Window
     {
         if (operation is not null) return;
         workspace.DisconnectAtlassian();
-        sessionSecrets.Remove("JIRA_API_TOKEN");
+        directJiraToken = null;
         JiraSiteBox.Text = "";
         JiraEmailBox.Text = "";
         JiraTokenBox.Text = "";
@@ -211,7 +295,12 @@ public sealed partial class MainWindow : Window
         {
             DesktopSettingsDraft.EnsureConnectionsApplied(sessionSecrets, HostTokenBox.Text, GitLabTokenBox.Text,
                 workspace.HasAtlassian, JiraSiteBox.Text, JiraEmailBox.Text, JiraTokenBox.Text);
+            var selectedApp = SelectedCatalogProvider();
+            DesktopConnectorSettings? appliedApp = null;
+            if (selectedApp is not null) workspace.ConnectorSettings.TryGetValue(selectedApp.Id, out appliedApp);
+            DesktopSettingsDraft.EnsureCatalogApplied(appliedApp, selectedApp?.RequiresBase == true, CatalogBaseBox.Text, CatalogCredentialBox.Text);
             var values = new Dictionary<string, string>(sessionSecrets, StringComparer.Ordinal);
+            if (workspace.HasAtlassian && directJiraToken is { } jiraToken) values["DIRECT_JIRA_API_TOKEN"] = jiraToken;
             var activeCredential = CredentialBox.Text?.Trim();
             if (!string.IsNullOrWhiteSpace(activeCredential))
             {
@@ -220,7 +309,8 @@ public sealed partial class MainWindow : Window
             }
             workspace.UpdateConnectionSecrets(values.Values);
             var settings = new DesktopSettings(ProviderBox.SelectedIndex, ModelBox.Text?.Trim() ?? "", PolicyBox.Text?.Trim() ?? "",
-                workspace.HasAtlassian ? workspace.AtlassianSite! : "", workspace.HasAtlassian ? JiraEmailBox.Text?.Trim() ?? "" : "", values);
+                workspace.HasAtlassian ? workspace.AtlassianSite! : "", workspace.HasAtlassian ? JiraEmailBox.Text?.Trim() ?? "" : "", values,
+                new(workspace.ConnectorSettings, StringComparer.Ordinal));
             await Task.Run(() => settingsStore.SaveAsync(settings, ct), ct);
             SetStatus("Settings saved securely for this OS user.");
         });
@@ -246,11 +336,13 @@ public sealed partial class MainWindow : Window
             ProviderBox.SelectedIndex = saved.Provider;
             ModelBox.Text = saved.Model;
             PolicyBox.Text = saved.PolicyPath;
-            foreach (var entry in saved.Secrets) sessionSecrets[entry.Key] = entry.Value;
+            foreach (var entry in DesktopSettingsDraft.RuntimeSecrets(saved.Secrets)) sessionSecrets[entry.Key] = entry.Value;
             UpdateRedaction();
+            foreach (var entry in saved.Connectors ?? []) workspace.ConnectCatalogApp(entry.Key, entry.Value);
             if (saved.JiraSite.Length > 0)
             {
-                workspace.ConnectAtlassian(saved.JiraSite, saved.JiraEmail, sessionSecrets["JIRA_API_TOKEN"]);
+                directJiraToken = DesktopSettingsDraft.DirectJiraToken(saved.Secrets)!;
+                workspace.ConnectAtlassian(saved.JiraSite, saved.JiraEmail, directJiraToken);
                 JiraSiteBox.Text = saved.JiraSite;
                 JiraEmailBox.Text = saved.JiraEmail;
                 UpdateJiraUi();
@@ -597,7 +689,7 @@ public sealed partial class MainWindow : Window
         ContextCancelButton.IsVisible = busy;
         CancelButton.IsEnabled = busy;
         SendButton.IsVisible = !busy;
-        foreach (var control in new Control[] { AttachButton, AccountMode, TokenMode, ConnectButton, SaveSettingsButton, ForgetSettingsButton, AddAppButton, GitHubSaveButton, GitLabSaveButton, JiraConnectButton, JiraDisconnectButton, CredentialBox, HostTokenBox, GitLabTokenBox, JiraSiteBox, JiraEmailBox, JiraTokenBox, PrUrlBox, PrButton, ReferencesButton, DiffButton,
+        foreach (var control in new Control[] { AttachButton, AccountMode, TokenMode, ConnectButton, SaveSettingsButton, ForgetSettingsButton, AddAppButton, GitHubSaveButton, GitLabSaveButton, JiraConnectButton, JiraDisconnectButton, CredentialBox, HostTokenBox, GitLabTokenBox, JiraSiteBox, JiraEmailBox, JiraTokenBox, CatalogProviderBox, CatalogActionBox, CatalogBaseBox, CatalogCredentialBox, CatalogConnectButton, CatalogAddButton, CatalogParametersPanel, PrUrlBox, PrButton, ReferencesButton, DiffButton,
                      ProviderBox, ModelBox, PolicyBox, ReferenceBox, RepositoryBox, BaseBox, HeadBox, PromptBox })
             control.IsEnabled = !busy;
     }

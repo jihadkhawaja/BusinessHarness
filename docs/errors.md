@@ -34,6 +34,11 @@ enabled names, invalid controls, and per-entry or aggregate size limits are
 configuration errors. The same bounds apply after redaction. No provider or host
 call is made for invalid CLI configuration. See [review skills](configuration.md#review-skills-bank).
 
+Invalid AgentSpace settings and denied provider or evidence grants use BH1002.
+A denied evidence grant stops the run before provider dispatch. Unavailable or
+corrupt workspace storage uses BH1008, and workspace execution limits use
+BH1007. See [AgentSpace review permissions](configuration.md#agentspace-review-permissions).
+
 Example `error.json`:
 
 ```json

@@ -11,6 +11,37 @@ public sealed class ConnectionTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task PersonalJiraAndPolicyJiraUseDifferentTenantCredentials()
+    {
+        using var directory = new TempDirectory();
+        var policyPath = Path.Combine(directory.Path, "policy.json");
+        await File.WriteAllTextAsync(policyPath, """{"jiraSite":"https://policy.atlassian.net/"}""", Ct);
+        using var handler = new StubHttpHandler(request =>
+        {
+            var expected = request.RequestUri!.Host switch
+            {
+                "personal.atlassian.net" => "personal@example.invalid:personal-token",
+                "policy.atlassian.net" => "policy@example.invalid:policy-token",
+                _ => throw new InvalidOperationException("Unexpected destination")
+            };
+            Assert.Equal(Convert.ToBase64String(Encoding.UTF8.GetBytes(expected)), request.Headers.Authorization!.Parameter);
+            return Task.FromResult(StubHttpHandler.Json("""{"key":"PROJ-123","fields":{"summary":"Issue","description":"Details"}}"""));
+        });
+        using var client = new HttpClient(handler);
+        var workspace = new DesktopWorkspace(client, name => name switch
+        {
+            "JIRA_EMAIL" => "policy@example.invalid",
+            "JIRA_API_TOKEN" => "policy-token",
+            _ => null
+        });
+        workspace.ConnectAtlassian("https://personal.atlassian.net/", "personal@example.invalid", "personal-token");
+        await workspace.ConfigureAsync(policyPath, "openai", "test-model", Ct);
+        await workspace.ReadAtlassianAsync("jira", "PROJ-123", Ct);
+        await workspace.ReadReferencesAsync("PROJ-123", Ct);
+        Assert.Equal(2, handler.Calls);
+    }
+
     [Theory]
     [InlineData("http://team.atlassian.net/")]
     [InlineData("https://team.atlassian.net.evil.example/")]

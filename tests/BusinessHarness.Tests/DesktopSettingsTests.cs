@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using BusinessHarness.Core;
 using BusinessHarness.Desktop;
 using BusinessHarness.Infrastructure;
@@ -34,6 +35,31 @@ public sealed class DesktopSettingsTests
     }
 
     [Fact]
+    public void PendingCatalogCredentialsOrInstanceUrlMustBeAppliedBeforeSaving()
+    {
+        var current = new DesktopConnectorSettings("https://team.example.com/", "token");
+        DesktopSettingsDraft.EnsureCatalogApplied(current, true, "https://team.example.com/", "");
+        Assert.Throws<HarnessException>(() => DesktopSettingsDraft.EnsureCatalogApplied(current, true, "https://other.example.com/", ""));
+        Assert.Throws<HarnessException>(() => DesktopSettingsDraft.EnsureCatalogApplied(current, true, "", ""));
+        Assert.Throws<HarnessException>(() => DesktopSettingsDraft.EnsureCatalogApplied(current, true, null, ""));
+        Assert.Throws<HarnessException>(() => DesktopSettingsDraft.EnsureCatalogApplied(current, true, "https://team.example.com/", "replacement"));
+        Assert.Throws<HarnessException>(() => DesktopSettingsDraft.EnsureCatalogApplied(null, true, "https://team.example.com/", ""));
+    }
+
+    [Theory]
+    [InlineData("JIRA_API_TOKEN")]
+    [InlineData("DIRECT_JIRA_API_TOKEN")]
+    public void SavedPersonalJiraTokenNeverBecomesPolicyEnvironmentSecret(string tokenName)
+    {
+        var stored = new Dictionary<string, string> { [tokenName] = "personal-token", ["GITHUB_TOKEN"] = "github-token" };
+        Assert.Equal("personal-token", DesktopSettingsDraft.DirectJiraToken(stored));
+        var runtime = DesktopSettingsDraft.RuntimeSecrets(stored);
+        Assert.False(runtime.ContainsKey("JIRA_API_TOKEN"));
+        Assert.False(runtime.ContainsKey("DIRECT_JIRA_API_TOKEN"));
+        Assert.Equal("github-token", runtime["GITHUB_TOKEN"]);
+    }
+
+    [Fact]
     public async Task SettingsRoundTripEncryptsEveryFieldAndUsesFreshNonce()
     {
         using var directory = new TempDirectory();
@@ -52,6 +78,52 @@ public sealed class DesktopSettingsTests
         Assert.Equal(Settings.Secrets["GITHUB_TOKEN"], loaded.Secrets["GITHUB_TOKEN"]);
         await store.SaveAsync(Settings, Ct);
         Assert.NotEqual(first, await File.ReadAllBytesAsync(path, Ct));
+    }
+
+    [Fact]
+    public async Task SavedCatalogConnectionsRemainEncryptedAndBoundToTheirProvider()
+    {
+        using var directory = new TempDirectory();
+        var vault = new FakeVault();
+        var store = new DesktopSettingsStore(directory.Path, vault);
+        var settings = Settings with { Connectors = new() { ["notion"] = new("", "notion-private-value"), ["asana"] = new("", "asana-private-value") } };
+        await store.SaveAsync(settings, Ct);
+        var bytes = await File.ReadAllBytesAsync(Path.Combine(directory.Path, "settings.enc"), Ct);
+        Assert.DoesNotContain("private-value", Encoding.UTF8.GetString(bytes));
+        var restored = await store.LoadAsync(Ct);
+        Assert.Equal("notion-private-value", restored!.Connectors!["notion"].Credential);
+        Assert.Equal("asana-private-value", restored.Connectors["asana"].Credential);
+        var invalid = settings with { Connectors = new() { ["unknown-provider"] = new("", "value") } };
+        await Assert.ThrowsAsync<HarnessException>(() => store.SaveAsync(invalid, Ct));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(Path.Combine(directory.Path, "settings.enc"), Ct));
+    }
+
+    [Fact]
+    public async Task PreviouslySavedSettingsRestoreWithoutConnectorProperty()
+    {
+        using var directory = new TempDirectory();
+        var key = RandomNumberGenerator.GetBytes(32);
+        var vault = new FakeVault { Key = key.ToArray() };
+        var plain = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            provider = 0,
+            model = "test-model",
+            policyPath = "",
+            jiraSite = "https://team.atlassian.net/",
+            jiraEmail = "person@example.invalid",
+            secrets = new Dictionary<string, string> { ["JIRA_API_TOKEN"] = "legacy-jira-token" }
+        });
+        var header = "BHSET01"u8.ToArray();
+        var nonce = RandomNumberGenerator.GetBytes(12);
+        var tag = new byte[16];
+        var cipher = new byte[plain.Length];
+        using (var aes = new AesGcm(key, tag.Length)) aes.Encrypt(nonce, plain, cipher, tag, header);
+        await File.WriteAllBytesAsync(Path.Combine(directory.Path, "settings.enc"), [.. header, .. nonce, .. tag, .. cipher], Ct);
+        var restored = await new DesktopSettingsStore(directory.Path, vault).LoadAsync(Ct);
+        Assert.NotNull(restored);
+        Assert.Null(restored.Connectors);
+        Assert.Equal("legacy-jira-token", DesktopSettingsDraft.DirectJiraToken(restored.Secrets));
+        Assert.DoesNotContain("JIRA_API_TOKEN", DesktopSettingsDraft.RuntimeSecrets(restored.Secrets).Keys);
     }
 
     [Fact]

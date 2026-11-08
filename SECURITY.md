@@ -15,6 +15,13 @@ processes running as the same unlocked OS user may access that user's vault.
 Confluence HTML and model responses are rendered as plain text. Existing
 reference routing, Git isolation and HTTP restrictions also apply to desktop reads.
 
+The desktop also exposes explicit user-selected connector reads. Credentials
+are scoped to the selected catalog provider and user-configured instance base;
+requests refuse redirects and cookies. Returned JSON is
+bounded and redacted as decoded names and values before reserialization; ambiguous
+redacted object keys fail closed. Query inputs for these manual requests are
+entered by the user and never selected by the model or reviewed repository data.
+
 The desktop's personal Atlassian connection keeps the site, account email and API
 token in process memory and can optionally save them in encrypted user settings. It validates a fixed HTTPS `*.atlassian.net` tenant and
 sends Basic authentication only to that tenant's fixed Jira and Confluence read
@@ -26,8 +33,10 @@ the Atlassian account; direct integration requires the user's explicit selection
 
 AgentConnector is pinned source at `external/AgentConnector`. BusinessHarness uses
 its catalog and request builder for native Jira and explicitly configured
-reference GET actions. Connector write/body actions and proxies are rejected
-before HTTP dispatch. Policy controls the base URI, action and fixed parameters;
+reference reads. Catalog GETs are bodyless. Fixed read actions use app-owned POST
+bodies and GraphQL documents, with captured identifiers passed as typed values.
+Connector writes, arbitrary bodies and proxies are rejected before HTTP dispatch.
+Policy controls the base URI, action and fixed parameters;
 untrusted metadata supplies only a validated identifier. Requests still use
 BusinessHarness authentication, `SafeHttp` limits, redirect refusal, TLS validation,
 safe diagnostics and redaction. AgentConnector's transport/DNS pinning, OAuth,
@@ -51,6 +60,13 @@ references, comments and memory cannot define or enable skills. The runtime does
 not discover `SKILL.md` files, execute skill scripts, download skill resources or
 grant tools. Protect bank definitions and pipeline selection alongside other
 policy; skills do not change validation, gates, or feedback authorization.
+
+The opt-in AgentSpace policy binds the CLI review to a trusted tenant and agent.
+Its sole registered command calls the existing bounded provider adapter with the
+configured provider and evidence grants. Reviewed data cannot select the identity,
+storage, command or grants. Workspace state contains execution bookkeeping.
+Only BusinessHarness's existing provider adapter handles the model credential,
+and only the host adapter can publish feedback after the existing authorization checks.
 
 Pipeline guidance:
 

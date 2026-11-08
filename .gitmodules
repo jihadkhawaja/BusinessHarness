@@ -4,3 +4,6 @@
 [submodule "external/AgentConnector"]
 	path = external/AgentConnector
 	url = https://github.com/jihadkhawaja/AgentConnector.git
+[submodule "external/AgentSpace"]
+	path = external/AgentSpace
+	url = https://github.com/jihadkhawaja/AgentSpace.git

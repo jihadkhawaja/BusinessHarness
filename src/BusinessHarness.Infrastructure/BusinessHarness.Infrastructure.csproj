@@ -9,6 +9,7 @@
   <ItemGroup><ProjectReference Include="../BusinessHarness.Application/BusinessHarness.Application.csproj" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../external/MAGICore/src/MagiCore/MagiCore.csproj" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../external/AgentConnector/src/AgentConnector/AgentConnector.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../external/AgentSpace/src/AgentSpace.Infrastructure/AgentSpace.Infrastructure.csproj" /></ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Templates/review-comment.md" LogicalName="BusinessHarness.ReviewCommentTemplate.md" />
   </ItemGroup>

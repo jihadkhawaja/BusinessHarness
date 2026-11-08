@@ -29,6 +29,7 @@ Review code changes, check them against tickets and specs, and catch potential i
 - **AI reviews** with OpenAI or Claude, plus an offline credential-pattern scan.
 - **Ticket and spec checks** using Jira Cloud, AgentConnector read actions, or configured JSON APIs.
 - **Configurable review skills** from a trusted bank, enabled per pipeline or PR review.
+- **Optional AgentSpace permissions** for CLI review agents, including provider and evidence access.
 - **Optional feedback and memory** for PR/MR comments, approvals, and follow-up reviews.
 - **Reports you can use** in JSON, Markdown, and SARIF.
 - **Self-managed deployment** on premises or in private cloud infrastructure, using OpenAI or Claude API credentials.
@@ -146,6 +147,10 @@ Define reusable review guidance in a trusted [skills bank](examples/harness.skil
 and select it per review with `--skills dotnet,api-security` or the GitHub Action's
 `skills` input. Agents apply relevant enabled skills on demand; see
 [review skills](docs/configuration.md#review-skills-bank).
+
+Use [AgentSpace policy](docs/configuration.md#agentspace-review-permissions) to
+bind a CLI review to a tenant and agent, restrict which provider the agent can
+call, and explicitly grant access to references or recalled memory.
 
 ## Use in CI
 

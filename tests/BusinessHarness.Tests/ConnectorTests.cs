@@ -81,6 +81,37 @@ public sealed class ConnectorTests
         Assert.Equal(ErrorCode.Configuration, failure.Code);
     }
 
+    [Theory]
+    [InlineData("jira.search_issues", "jql")]
+    [InlineData("confluence.search", "cql")]
+    [InlineData("salesforce.query", "q")]
+    public void UntrustedReferenceCannotSupplyQueryLanguage(string action, string parameter)
+    {
+        Assert.Throws<HarnessException>(() => ConnectorReferenceRequests.Build(new()
+        {
+            Action = action,
+            IdParameter = parameter,
+            BaseUri = "https://tenant.example.com/"
+        }, "status = Open OR assignee is not EMPTY"));
+    }
+
+    [Fact]
+    public void ExistingSlackChannelQueryIdentifierRemainsSupported()
+    {
+        using var request = ConnectorReferenceRequests.Build(new() { Action = "slack.list_messages", IdParameter = "channel" }, "C123");
+        Assert.Equal("https://slack.com/api/conversations.history?channel=C123", request.RequestUri!.AbsoluteUri);
+    }
+
+    [Theory]
+    [InlineData("project")]
+    [InlineData("workspace")]
+    [InlineData("assignee")]
+    public void ExistingAsanaQueryIdentifiersRemainSupported(string parameter)
+    {
+        using var request = ConnectorReferenceRequests.Build(new() { Action = "asana.list_tasks", IdParameter = parameter }, "123");
+        Assert.Equal($"https://app.asana.com/api/1.0/tasks?{parameter}=123", request.RequestUri!.AbsoluteUri);
+    }
+
     [Fact]
     public async Task ConfluenceRequestsStorageBodyThroughTheTrustedGateway()
     {

@@ -145,6 +145,7 @@
                 <Button Click="SelectJira_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#1657C0" Width="34" Height="34" CornerRadius="9"><TextBlock Text="J" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Jira &amp; Confluence" VerticalAlignment="Center" /></StackPanel></Button>
                 <Button Click="SelectGitHub_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#515151" Width="34" Height="34" CornerRadius="9"><TextBlock Text="GH" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="GitHub" VerticalAlignment="Center" /></StackPanel></Button>
                 <Button Click="SelectGitLab_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#AD5129" Width="34" Height="34" CornerRadius="9"><TextBlock Text="GL" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="GitLab" VerticalAlignment="Center" /></StackPanel></Button>
+                <Button Click="SelectCatalog_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#385A58" Width="34" Height="34" CornerRadius="9"><TextBlock Text="✦" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="More apps" VerticalAlignment="Center" /></StackPanel></Button>
                 <Button Click="SelectPolicy_Click" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel Orientation="Horizontal" Spacing="12"><Border Background="#495249" Width="34" Height="34" CornerRadius="9"><TextBlock Text="≡" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Trusted policy" VerticalAlignment="Center" /></StackPanel></Button>
               </StackPanel>
               <Border x:Name="JiraDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20">
@@ -166,6 +167,25 @@
               </Border>
               <Border x:Name="GitHubDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="GitHub" FontWeight="SemiBold" /><TextBlock Text="Read-only access token" Classes="muted" /><TextBox x:Name="HostTokenBox" PlaceholderText="GitHub token" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="GitHub token" /><Button x:Name="GitHubSaveButton" Content="Use token" Click="SaveGitHub_Click" Classes="primary" HorizontalAlignment="Left" /><TextBlock x:Name="GitHubStatus" Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
               <Border x:Name="GitLabDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="GitLab" FontWeight="SemiBold" /><TextBlock Text="Read-only access token" Classes="muted" /><TextBox x:Name="GitLabTokenBox" PlaceholderText="GitLab token" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="GitLab token" /><Button x:Name="GitLabSaveButton" Content="Use token" Click="SaveGitLab_Click" Classes="primary" HorizontalAlignment="Left" /><TextBlock x:Name="GitLabStatus" Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
+              <Border x:Name="CatalogDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="More apps" FontWeight="SemiBold" />
+                  <ComboBox x:Name="CatalogProviderBox" PlaceholderText="Choose an app" HorizontalAlignment="Stretch" SelectionChanged="CatalogProvider_Changed" AutomationProperties.Name="App" />
+                  <TextBlock x:Name="CatalogStatus" Classes="muted" TextWrapping="Wrap" />
+                  <StackPanel x:Name="CatalogConnectionFields" Spacing="10" IsVisible="False">
+                    <TextBox x:Name="CatalogBaseBox" IsVisible="False" PlaceholderText="Your app's HTTPS API base URL" MaxLength="2000" AutomationProperties.Name="App API base URL" />
+                    <TextBlock x:Name="CatalogCredentialHint" Classes="muted" TextWrapping="Wrap" />
+                    <TextBox x:Name="CatalogCredentialBox" PlaceholderText="Credential" PasswordChar="●" MaxLength="16000" AutomationProperties.Name="App credential" />
+                    <Button x:Name="CatalogConnectButton" Content="Use connection" Click="CatalogConnect_Click" Classes="primary" HorizontalAlignment="Left" />
+                  </StackPanel>
+                  <StackPanel x:Name="CatalogReadFields" IsVisible="False" Spacing="10">
+                    <TextBlock Text="Add information to chat" FontWeight="SemiBold" />
+                    <ComboBox x:Name="CatalogActionBox" PlaceholderText="Choose what to read" HorizontalAlignment="Stretch" SelectionChanged="CatalogAction_Changed" AutomationProperties.Name="Read action" />
+                    <StackPanel x:Name="CatalogParametersPanel" Spacing="8" />
+                    <Button x:Name="CatalogAddButton" Content="Add to chat" Click="CatalogAdd_Click" Classes="primary" HorizontalAlignment="Left" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
               <Border x:Name="PolicyDetails" IsVisible="False" Background="#2A2A2A" CornerRadius="14" Padding="20"><StackPanel Spacing="12"><TextBlock Text="Trusted policy" FontWeight="SemiBold" /><TextBox x:Name="PolicyBox" PlaceholderText="Optional JSON file" AutomationProperties.Name="Trusted policy path" /><Button Content="Browse…" Click="ChoosePolicy_Click" Classes="quiet" HorizontalAlignment="Left" /><TextBlock Text="Apply your policy using the AI provider Connect button." Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
             </StackPanel>
           </StackPanel>

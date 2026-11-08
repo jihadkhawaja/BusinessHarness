@@ -1,0 +1,8 @@
+{
+  "agentWorkspace": {
+    "tenant": "businessharness",
+    "agent": "automatic-pr-review",
+    "allowedProviders": ["openai", "anthropic"],
+    "allowReferences": true
+  }
+}

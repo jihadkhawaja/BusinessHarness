@@ -4,10 +4,26 @@ using BusinessHarness.Core;
 
 namespace BusinessHarness.Infrastructure;
 
-public sealed record DesktopSettings(int Provider, string Model, string PolicyPath, string JiraSite, string JiraEmail, Dictionary<string, string> Secrets);
+public sealed record DesktopSettings(int Provider, string Model, string PolicyPath, string JiraSite, string JiraEmail,
+    Dictionary<string, string> Secrets, Dictionary<string, DesktopConnectorSettings>? Connectors = null);
 
 public static class DesktopSettingsDraft
 {
+    public static string? DirectJiraToken(IReadOnlyDictionary<string, string> secrets) =>
+        secrets.TryGetValue("DIRECT_JIRA_API_TOKEN", out var current) ? current : secrets.GetValueOrDefault("JIRA_API_TOKEN");
+
+    public static Dictionary<string, string> RuntimeSecrets(IReadOnlyDictionary<string, string> secrets) =>
+        secrets.Where(pair => pair.Key is not ("DIRECT_JIRA_API_TOKEN" or "JIRA_API_TOKEN"))
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+
+    public static void EnsureCatalogApplied(DesktopConnectorSettings? applied, bool requiresBase, string? baseUri, string? credential)
+    {
+        var draftBase = baseUri?.Trim() ?? "";
+        if (!string.IsNullOrWhiteSpace(credential) ||
+            (requiresBase && (applied is null ? draftBase.Length > 0 : applied.BaseUri != draftBase)))
+            throw new HarnessException(ErrorCode.Configuration, "Apply your app connection first.", "Choose Use connection, then save settings again.");
+    }
+
     public static void EnsureConnectionsApplied(IReadOnlyDictionary<string, string> applied, string? github, string? gitlab,
         bool jiraConnected, string? jiraSite, string? jiraEmail, string? jiraToken)
     {
@@ -33,7 +49,7 @@ public sealed class DesktopSettingsStore(string directory, IDesktopSettingsKeyVa
     private static readonly byte[] Header = "BHSET01"u8.ToArray();
     private static readonly HashSet<string> AllowedSecrets = new(StringComparer.Ordinal)
     {
-        "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_CHATGPT_ACCESS_TOKEN", "GITHUB_TOKEN", "GITLAB_TOKEN", "JIRA_API_TOKEN"
+        "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_CHATGPT_ACCESS_TOKEN", "GITHUB_TOKEN", "GITLAB_TOKEN", "JIRA_API_TOKEN", "DIRECT_JIRA_API_TOKEN"
     };
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private readonly string file = Path.Combine(directory, "settings.enc");
@@ -194,8 +210,15 @@ public sealed class DesktopSettingsStore(string directory, IDesktopSettingsKeyVa
             settings.Secrets is null || settings.Secrets.Count > AllowedSecrets.Count ||
             settings.Secrets.Any(p => !AllowedSecrets.Contains(p.Key) || string.IsNullOrWhiteSpace(p.Value) || p.Value.Length > 16_000 || p.Value.Any(char.IsControl))) throw Invalid();
         if (settings.JiraSite.Length > 0) _ = JiraIssueSource.ValidateSite(settings.JiraSite);
-        if ((settings.JiraSite.Length > 0 || settings.JiraEmail.Length > 0 || settings.Secrets.ContainsKey("JIRA_API_TOKEN")) &&
-            (settings.JiraSite.Length == 0 || settings.JiraEmail.Length == 0 || settings.JiraEmail.Contains(':') || settings.JiraEmail.Any(char.IsControl) || !settings.Secrets.ContainsKey("JIRA_API_TOKEN"))) throw Invalid();
+        if (settings.Secrets.ContainsKey("JIRA_API_TOKEN") && settings.Secrets.ContainsKey("DIRECT_JIRA_API_TOKEN")) throw Invalid();
+        var jiraToken = DesktopSettingsDraft.DirectJiraToken(settings.Secrets);
+        if ((settings.JiraSite.Length > 0 || settings.JiraEmail.Length > 0 || jiraToken is not null) &&
+            (settings.JiraSite.Length == 0 || settings.JiraEmail.Length == 0 || settings.JiraEmail.Contains(':') || settings.JiraEmail.Any(char.IsControl) || jiraToken is null)) throw Invalid();
+        if (settings.Connectors is { } connectors)
+        {
+            if (connectors.Count > 64) throw Invalid();
+            foreach (var (provider, connection) in connectors) DesktopConnectorCatalog.ValidateConnection(provider, connection);
+        }
     }
 
     private static HarnessException Invalid() => new(ErrorCode.FileSystem, "Saved settings could not be verified.", "Check the OS credential store and the settings file; no plaintext fallback is used.");

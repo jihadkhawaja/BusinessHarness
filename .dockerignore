@@ -6,6 +6,10 @@
 artifacts
 harness-results
 .env*
+.credentials
+.credentials.*
+**/.credentials
+**/.credentials.*
 tests
 docs
 examples

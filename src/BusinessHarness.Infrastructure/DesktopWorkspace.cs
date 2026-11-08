@@ -11,6 +11,26 @@ public sealed class DesktopWorkspace(HttpClient client, Func<string, string?> en
     private SecretRedactor redactor = new();
     private HashSet<string> knownSecrets = new(StringComparer.Ordinal);
     private DirectAtlassianConnection? atlassian;
+    private readonly Dictionary<string, DesktopConnectorSettings> connectors = new(StringComparer.Ordinal);
+
+    public IReadOnlyDictionary<string, DesktopConnectorSettings> ConnectorSettings => connectors;
+
+    public void ConnectCatalogApp(string provider, DesktopConnectorSettings settings)
+    {
+        DesktopConnectorCatalog.ValidateConnection(provider, settings);
+        UpdateConnectionSecrets(DesktopConnectorCatalog.Secrets(provider, settings));
+        connectors[provider] = settings;
+    }
+
+    public bool HasCatalogApp(string provider) => connectors.ContainsKey(provider);
+
+    public async Task<ChatAttachment> ReadCatalogAppAsync(string provider, string action,
+        IReadOnlyDictionary<string, string> values, CancellationToken ct)
+    {
+        if (!connectors.TryGetValue(provider, out var settings))
+            throw new HarnessException(ErrorCode.Configuration, "Connect this app first.", "Add the app in Settings.");
+        return await DesktopConnectorCatalog.ReadAsync(client, provider, settings, action, values, redactor, ct);
+    }
 
     public bool HasAtlassian => atlassian is not null;
     public string? AtlassianSite => atlassian?.Site;

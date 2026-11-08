@@ -27,5 +27,6 @@
     <None Include="../../assets/icon.png" Pack="true" PackagePath="/" />
     <None Include="../../external/MAGICore/LICENSE" Pack="true" PackagePath="licenses/MAGICore/" />
     <None Include="../../external/AgentConnector/LICENSE" Pack="true" PackagePath="licenses/AgentConnector/" />
+    <None Include="../../external/AgentSpace/LICENSE" Pack="true" PackagePath="licenses/AgentSpace/" />
   </ItemGroup>
 </Project>

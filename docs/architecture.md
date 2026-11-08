@@ -4,13 +4,14 @@ Reference requests use the provider catalog and request builder from the pinned
 `external/AgentConnector` submodule. Infrastructure owns this dependency;
 Core/Application retain source-neutral policy and ports. Native Jira uses
 `jira.get_issue`; trusted `referenceSources[].connector` configuration can select
-other named GET actions. The CLI validates all configured connector requests
+other named GET actions and fixed read queries. The CLI validates all configured connector requests
 before network access. Only captured identifiers enter the selected parameter;
 actions, fixed inputs and destinations come from trusted policy. BusinessHarness
 retains authentication, bounded HTTP, redaction, extraction and reference gates.
-The CLI and desktop enable no connector server, OAuth lifecycle, credential store,
-proxy or write action. Desktop personal connections send explicitly supplied
-credentials to fixed read-only Jira/Confluence routes. The compiled library
+The CLI reads pipeline credentials from the environment. Desktop personal connections
+send explicitly supplied credentials directly to provider APIs and can save them
+using the user's OS-protected settings key. Both paths use the same fixed queries
+for reads that require POST. The compiled library
 requires the ASP.NET Core 10 shared runtime.
 
 Trusted policy can define a bounded `skillBank` and `enabledSkills`. Invocation
@@ -19,6 +20,16 @@ only selected skill guidance into system instructions; the model chooses relevan
 guidance by description within its single review call. Skills add no tools or file
 access and remain subordinate to the shared review rules. Skills are never loaded
 from reviewed repository content. See [skills configuration](configuration.md#review-skills-bank).
+
+When trusted CLI policy enables `agentWorkspace`, Infrastructure binds the
+selected `IReviewProvider` to a tenant and agent in the pinned AgentSpace runtime.
+The host registers only `review.generate`. AgentSpace enforces the agent's provider
+and evidence grants and per-agent concurrency limit before invoking the existing
+provider adapter. The command carries only fixed capability labels. The evidence
+and review result stay in process memory as they pass through the adapter. The
+workspace state supports execution bookkeeping. Application still owns result
+validation and the gate, and the host adapter owns authorized feedback.
+See [AgentSpace configuration](configuration.md#agentspace-review-permissions).
 
 Dependencies point inward:
 

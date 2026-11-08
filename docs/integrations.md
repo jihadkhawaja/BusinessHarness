@@ -69,7 +69,7 @@ Update an existing installation with `dotnet tool update --global BusinessHarnes
 For reproducible CI runs, pin a reviewed version, for example
 `dotnet tool install --global BusinessHarness --version 0.1.0`.
 The package includes the BusinessHarness license, third-party notices and
-MAGICore's and AgentConnector's Apache 2.0 licenses. BusinessHarness is licensed under the
+MAGICore's, AgentConnector's and AgentSpace's Apache 2.0 licenses. BusinessHarness is licensed under the
 [MIT License](../LICENSE).
 
 [publish-nuget.yml](../.github/workflows/publish-nuget.yml) runs on a **published,
@@ -198,8 +198,8 @@ runners use the same policy with `--config /trusted/harness.connectors.policy.js
 Reference identifiers come from PR/MR metadata or `--reference support:42`.
 Run `businessharness validate --config PATH` to validate actions and credential
 presence without API calls. OAuth tokens must be obtained/refreshed outside this
-CLI. The adapter exposes catalog GET requests only; it does not make all connector
-providers or write actions available to the review model. See
+CLI. Reference sources run supported catalog GET requests and fixed reads before
+the model receives the extracted text. See
 [the connector configuration contract](configuration.md#agentconnector-reference-actions).
 
 ## Pipeline skill selection

@@ -38,6 +38,9 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
             policy = policy with { Memory = await MemorySettings.ResolveAsync(policy.Memory, options, environment, cancellationToken) };
             policy.Validate();
             ConnectorReferenceRequests.ValidateSources(policy.ReferenceSources);
+            var agentRuntime = (options.Command is "review" or "validate") && policy.AgentWorkspace is { } workspace
+                ? new AgentSpaceReviewRuntime(workspace, policy.Provider, policy.TimeoutSeconds, options.Repository, options.OutputDirectory)
+                : null;
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(policy.TimeoutSeconds));
             var commentTemplate = options.CommentTemplatePath is null ? policy.ReviewCommentTemplate :
@@ -108,6 +111,7 @@ public sealed class CliApplication(Func<string, string?>? environment = null)
             IReviewProvider? provider = options.Command == "scan" ? null : policy.Provider == "openai"
                 ? new OpenAiReviewProvider(http, policy, RequiredSecret(keyName), redactor)
                 : new AnthropicReviewProvider(http, policy, RequiredSecret(keyName), redactor);
+            if (agentRuntime is not null && provider is not null) provider = agentRuntime.Bind(provider);
             IIssueSource? jira = options.Command == "scan" || (policy.JiraSite is null && !options.IssueKeys.Any(JiraIssueSource.IsIssueKey)) ? null : new JiraIssueSource(http, policy,
                 RequiredSecret("JIRA_EMAIL"), RequiredSecret("JIRA_API_TOKEN"), redactor);
             IReferenceResolver? resolver = options.Command == "scan" ? null : new ReferenceResolver(http, policy, environment, redactor, jira);

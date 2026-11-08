@@ -25,7 +25,7 @@ public sealed record ReferenceSourcePolicy
             (Connector is null && !Endpoint.Contains("{id}", StringComparison.Ordinal)) ||
             (Connector is not null && Endpoint.Length != 0) ||
             TitlePath.Length is < 1 or > 200 || ContentPath.Length is < 1 or > 200 ||
-            AuthenticationHeader is not ("Authorization" or "PRIVATE-TOKEN" or "X-Api-Key") ||
+            AuthenticationHeader is not ("Authorization" or "PRIVATE-TOKEN" or "X-Api-Key" or "X-Shopify-Access-Token") ||
             AuthenticationScheme is not ("Bearer" or "Basic" or "") ||
             (TokenEnvironment is not null && !Regex.IsMatch(TokenEnvironment, "^[A-Z][A-Z0-9_]{0,127}$", RegexOptions.CultureInvariant)))
             throw Invalid();

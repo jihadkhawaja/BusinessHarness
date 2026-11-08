@@ -109,6 +109,25 @@ The app reads Jira and Confluence directly from your selected Atlassian site; no
 connection service or browser OAuth flow is required. Jira, GitHub and GitLab
 access is read-only and scoped by the permissions on your own tokens.
 
+## Connect more apps
+
+In **Settings → Add an app → More apps**, choose a provider from the pinned
+AgentConnector catalog. Enter its personal access token, API key or provisioned OAuth access token and, for an
+instance-based provider, its trusted HTTPS API base. Choose **Use connection**;
+then choose a read action, fill its fields and select **Add to chat**. The app
+makes that request directly, without a connector server, and sends only the
+selected, bounded result as an attachment. Each catalog provider has at least
+one read action. Linear, monday.com, Shopify, Dropbox, Google Analytics and Cohere
+use the [fixed reads listed in the connector configuration](configuration.md#fixed-connector-reads).
+Connector tokens and API bases are included only when you explicitly save
+encrypted settings. Obtain and renew access tokens with the provider.
+
+Pipelines use the same pinned catalog through explicit trusted `referenceSources`
+policy and CI-managed environment credentials. See [connector reference
+configuration](configuration.md#agentconnector-reference-actions). Pipelines
+have their own credentials. Untrusted PR text can supply only a validated
+identifier; it cannot choose a connector, endpoint, credential or query expression.
+
 ## Add other context
 
 - **Paperclip → Pull Request:** paste a GitHub or GitLab URL. Set the matching
@@ -118,7 +137,7 @@ access is read-only and scoped by the permissions on your own tokens.
 - **Paperclip → Ticket / Page → From policy:** attach comma-separated Jira keys
   or configured `SOURCE:ID` values using an explicit trusted JSON policy selected
   in **Settings → Add an app → Trusted policy**, then apply it with the AI **Connect** button. Start with the [desktop example](../examples/harness.desktop.policy.json).
-  Policy-based Jira uses `JIRA_EMAIL` and `JIRA_API_TOKEN`; other GET sources
+  Policy-based Jira uses `JIRA_EMAIL` and `JIRA_API_TOKEN`; other sources
   use their configured environment variables. Desktop connections are independent of CLI policy.
 
 Review attachment chips and remove individual items with ×. Press **Enter** to

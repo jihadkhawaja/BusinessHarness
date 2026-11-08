@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "agentspace.application": {
+        "type": "Project",
+        "dependencies": {
+          "AgentSpace.Domain": "[0.1.6, )"
+        }
+      },
+      "agentspace.domain": {
+        "type": "Project"
+      }
+    }
+  }
+}

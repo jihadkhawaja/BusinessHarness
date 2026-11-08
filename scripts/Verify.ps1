@@ -12,7 +12,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     & dotnet test --solution BusinessHarness.slnx -c Release --no-build
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
-    & dotnet format BusinessHarness.slnx --verify-no-changes --no-restore --exclude external/MAGICore external/AgentConnector
+    & dotnet format BusinessHarness.slnx --verify-no-changes --no-restore --exclude external/MAGICore external/AgentConnector external/AgentSpace
     if ($LASTEXITCODE -ne 0) { throw 'Formatting or analyzer check failed.' }
     $auditText = & dotnet package list --project BusinessHarness.slnx --vulnerable --include-transitive --format json --output-version 1
     if ($LASTEXITCODE -ne 0) { throw 'Vulnerability query failed.' }

@@ -210,6 +210,21 @@
       "agentconnector": {
         "type": "Project"
       },
+      "agentspace.application": {
+        "type": "Project",
+        "dependencies": {
+          "AgentSpace.Domain": "[0.1.6, )"
+        }
+      },
+      "agentspace.domain": {
+        "type": "Project"
+      },
+      "agentspace.infrastructure": {
+        "type": "Project",
+        "dependencies": {
+          "AgentSpace.Application": "[0.1.6, )"
+        }
+      },
       "businessharness.application": {
         "type": "Project",
         "dependencies": {
@@ -223,6 +238,7 @@
         "type": "Project",
         "dependencies": {
           "AgentConnector": "[0.1.6, )",
+          "AgentSpace.Infrastructure": "[0.1.6, )",
           "BusinessHarness.Application": "[0.1.6, )",
           "MagiCore": "[1.0.0, )"
         }

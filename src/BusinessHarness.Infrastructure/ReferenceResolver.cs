@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -76,6 +77,7 @@ public sealed partial class ReferenceResolver(SafeHttp http, HarnessPolicy polic
             request.Headers.Add(source.AuthenticationHeader, (source.AuthenticationScheme.Length == 0 ? "" : source.AuthenticationScheme + " ") + token);
         }
         using var body = await http.SendAsync(request, "Reference source " + source.Name, ct);
+        ConnectorReadRecipe.ValidateResponse(source.Connector?.Action, body.RootElement);
         var title = ReadPath(body.RootElement, source.TitlePath);
         var content = ReadPath(body.RootElement, source.ContentPath);
         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
@@ -95,7 +97,13 @@ public sealed partial class ReferenceResolver(SafeHttp http, HarnessPolicy polic
     private static string? ReadPath(JsonElement element, string path)
     {
         foreach (var name in path.Split('.'))
-            if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out element)) return null;
+        {
+            if (element.ValueKind == JsonValueKind.Array && int.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out var index) &&
+                index < element.GetArrayLength())
+                element = element[index];
+            else if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out element))
+                return null;
+        }
         return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
     }
 

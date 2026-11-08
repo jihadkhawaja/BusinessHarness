@@ -10,6 +10,7 @@ public sealed class SafeHttp(HttpClient client)
     public static HttpClient CreateClient() => new(new SocketsHttpHandler
     {
         AllowAutoRedirect = false,
+        UseCookies = false,
         AutomaticDecompression = DecompressionMethods.None,
         ConnectTimeout = TimeSpan.FromSeconds(15),
         MaxResponseHeadersLength = 32

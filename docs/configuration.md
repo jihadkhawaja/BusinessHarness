@@ -61,7 +61,10 @@ Limits, binary changes, symlink changes, submodule changes, malformed output, re
 
 ## Dynamic reference sources
 
-`referenceSources` connects any service exposing a GET JSON API. Configure routing once in trusted policy; agents then receive references discovered from each PR/MR title and description. A source does not require a dedicated CLI command or a Jira adapter. For APIs requiring GraphQL, POST, HTML rendering or other protocols, implement `IReferenceResolver` or expose a trusted JSON gateway.
+`referenceSources` connects services exposing a GET JSON API and supported named
+connector reads. Configure routing in trusted policy to include references found
+in each PR/MR title and description. For other protocols or unsupported reads,
+implement `IReferenceResolver` or expose a trusted JSON gateway.
 
 ```json
 {
@@ -90,7 +93,7 @@ Limits, binary changes, symlink changes, submodule changes, malformed output, re
 
 A PR titled `WORK-42: implement export` with `https://docs.example.com/specs/export-v2` in its description fetches both sources automatically. Review assessments use `tracker:42` and `specs:export-v2` as identifiers. The output field `issueKey` remains for report/schema compatibility and now identifies any reference.
 
-Each source needs a unique lowercase `name` (up to 32 characters; `jira` is reserved), a .NET regex with named capture `id`, and a fixed trusted HTTPS `endpoint` template containing `{id}` in its path or query. Captured identifiers are URL encoded and cannot set the host, authentication or command. `titlePath` and `contentPath` are dot-separated JSON property paths, defaulting to `title` and `body`; both must resolve to non-empty strings. Tokens are optional for public APIs. `authenticationHeader` supports `Authorization` (default), `PRIVATE-TOKEN` and `X-Api-Key`; `authenticationScheme` supports `Bearer` (default), `Basic` and an empty prefix. For Basic authentication, supply the complete base64 credential value through the secret variable.
+Each source needs a unique lowercase `name` (up to 32 characters, with `jira` reserved), a .NET regex with named capture `id`, and a fixed trusted HTTPS `endpoint` template containing `{id}` in its path or query. Captured identifiers are URL encoded and cannot set the host, authentication or command. `titlePath` and `contentPath` are dot-separated JSON paths, defaulting to `title` and `body`. Numeric segments select zero-based array positions when traversing an array. Both paths must resolve to non-empty strings. Tokens are optional for public APIs. `authenticationHeader` supports `Authorization` (default), `PRIVATE-TOKEN`, `X-Api-Key` and `X-Shopify-Access-Token`. `authenticationScheme` supports `Bearer` (default), `Basic` and an empty prefix. For Basic authentication, supply the complete base64 credential value through the secret variable.
 
 Configured source matches take precedence over Jira discovery for overlapping text. Duplicate references are fetched once per run; distinct sources retain distinct identifiers. Unknown links are left as metadata and are not fetched. References inside fetched documents are not recursively followed. Missing documents, invalid content, regex timeouts, authentication errors and limits stop the review. Limits: 20 references, 32,000 characters per document, 128,000 characters combined, 64,000 characters of PR/MR metadata, 100 ms per regex operation and 1 MB per HTTP response.
 
@@ -101,7 +104,7 @@ from the pinned `external/AgentConnector` submodule. Native `jiraSite` reads use
 its `jira.get_issue` request builder, preserving Jira key checks, Basic auth,
 requested fields, ADF extraction and acceptance-criteria validation.
 
-Other sources can select a named catalog GET action instead of an `endpoint`:
+Other sources can select a named read action in place of an `endpoint`:
 
 ```json
 {
@@ -128,17 +131,23 @@ named `support:42`. The same reference coverage gate applies. Start with the
 
 | Connector property | Contract |
 | --- | --- |
-| action | Exact action ID from the pinned catalog; must use GET and accept no body |
-| idParameter | Catalog string parameter receiving the discovered identifier |
+| action | Exact ID of a bodyless GET from the pinned catalog or a [fixed read](#fixed-connector-reads) |
+| idParameter | Catalog string path parameter receiving the discovered identifier; approved query identifiers are `slack.list_messages` / `channel`, `jira.find_assignable_users` / `issueKey`, and `asana.list_tasks` / `project`, `workspace` or `assignee` |
 | baseUri | Optional trusted HTTPS API base ending in `/`, without query, fragment, credentials or custom port; required for instance providers such as Jira, Confluence and Zendesk |
 | inputs | Optional object of fixed catalog inputs; at most 20 scalar values, each at most 2,000 JSON characters; strings, numbers and booleans retain their types |
 
 Omit `endpoint` when configuring `connector`. Only `idParameter` receives matched
 text; `inputs` cannot also define that parameter. All other required catalog
 parameters must be supplied through `inputs`. Unknown actions/inputs, wrong types,
-missing required parameters, writes, body actions and proxies fail with BH1002
+missing required parameters, writes, caller-supplied bodies and proxies fail with BH1002
 before any API call. Catalog path identifiers must be single safe segments;
 slashes, backslashes, percent escapes and dot segments are rejected.
+
+Query expressions such as JQL, CQL or search queries cannot receive discovered
+identifiers. Previously configured query parameters outside the allowlist must be
+migrated to a supported path-based action or a trusted JSON endpoint. A query may
+be supplied as a trusted fixed input only when the action also has a permitted
+identifier parameter.
 
 Authentication uses the source's existing `tokenEnvironment`,
 `authenticationHeader` and `authenticationScheme` contract. Bearer is the default;
@@ -155,19 +164,42 @@ refresh tokens, persist credentials or start a connector server. The native
 `jiraSite` adapter continues to use its documented tenant Basic-auth route.
 
 Connector sources use the same dot-separated string field paths as JSON sources.
-They do not flatten ADF, join arrays, render HTML, follow pagination or recursively
-fetch linked pages. For structured Jira descriptions, use native `jiraSite` or a
+They resolve one string per path. For structured Jira descriptions, use native `jiraSite` or a
 trusted JSON gateway. A Confluence source requires a non-empty `body.storage.value`
 in the response; absent content fails the review. For `confluence.get_page`, the
 BusinessHarness adapter adds the required string input `body_format`, mapped to
 the API's `body-format` query; set `inputs: { "body_format": "storage" }` as in the
 example. This selects the [Confluence page body representation](https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-id-get).
-Catalog coverage alone does not make every provider action suitable for a reference
-document. POST/GraphQL actions
-are unavailable. Response/document limits, redaction, cancellation, TLS validation,
+Response/document limits, redaction, cancellation, TLS validation,
 redirect refusal and no automatic retries apply through BusinessHarness's
 `SafeHttp`; AgentConnector's OAuth, transport, DNS pinning and credential store are
 not used. Restrict runner egress as described in [SECURITY.md](../SECURITY.md).
+
+### Fixed connector reads
+
+These actions are available in desktop chat and trusted pipeline policy. Supply
+the listed identifier and omit `inputs`. Use the default API base except for
+Shopify, which requires the store's root `https://STORE.myshopify.com/` address.
+
+| Action | Identifier | Example title and content paths |
+| --- | --- | --- |
+| `linear.get_issue` | `issue_id`, such as `ENG-42` | `data.issue.title`, `data.issue.description` |
+| `monday.get_item` | `item_id`, a numeric item ID | `data.items.0.name`, `data.items.0.column_values.0.text` |
+| `shopify.get_product` | `product_id`, a numeric product ID | `data.product.title`, `data.product.description` |
+| `dropbox.get_file_metadata` | `path`, an account path or `id:…` | `name`, `path_display` |
+| `google_analytics.get_weekly_active_users` | `property_id`, a numeric GA4 property ID | `rows.0.dimensionValues.0.value`, `rows.0.metricValues.0.value` |
+| `cohere.get_model` | `model`, a model name | `name`, `endpoints.0` |
+
+For Linear personal API keys and monday.com tokens, use an empty
+`authenticationScheme`. For Shopify, also set
+`authenticationHeader` to `X-Shopify-Access-Token`. Store the read-scoped
+credential in the CI secret named by `tokenEnvironment`. Choose paths whose
+values are available for the record, such as the relevant monday.com text column.
+
+BusinessHarness owns the POST payloads and GraphQL query documents for these
+actions. GraphQL receives identifiers as variables and rejects errors and missing
+results. Dropbox returns metadata. Google Analytics returns daily active-user
+counts for the last seven complete days.
 
 ## Pull/merge request metadata and feedback
 
@@ -249,6 +281,47 @@ limit and is never silently truncated. Review values retain escaping and redacti
 the complete rendered comment is also checked for known secrets. A custom template
 does not change the severity gate, approval rules, or feedback opt-in. Local
 `review.md`, JSON, and SARIF reports retain their default formats.
+
+## AgentSpace review permissions
+
+Add `agentWorkspace` to the trusted policy passed to `review` or `validate`
+with `--config`. This opts the CLI into the AgentSpace runtime on Windows and
+Linux. Use a tenant and agent name for the runner identity you are configuring.
+The identifiers are case-sensitive, start with an ASCII letter or digit, and
+allow up to 128 ASCII letters, digits, periods, underscores and hyphens.
+
+```json
+{
+  "agentWorkspace": {
+    "tenant": "engineering",
+    "agent": "pr-review",
+    "allowedProviders": ["openai"],
+    "allowReferences": true,
+    "maxConcurrentRuns": 2
+  }
+}
+```
+
+| Property | Effect |
+| --- | --- |
+| `allowedProviders` | A nonempty list of unique `openai` or `anthropic` grants. The effective provider, including a `HARNESS_PROVIDER` override, must be listed. |
+| `allowReferences` | Permits the provider to receive resolved reference evidence. Defaults to `false`. |
+| `allowRecalledMemory` | Permits the provider to receive recalled historical context when MAGICore memory is enabled separately. Defaults to `false`. |
+| `maxConcurrentRuns` | Allows 1–64 simultaneous provider runs for the same tenant and agent under the same directory on one machine. Defaults to 2. Keep the settings consistent across processes sharing an identity. |
+| `directory` | Optional absolute path to a dedicated runner-owned directory on a writable local filesystem, separate from the checkout and report directory. Defaults to `BusinessHarness/agent-workspaces` under the runner's local application data directory. |
+
+If a review resolves references or recalls memory without the corresponding
+grant, it fails before the provider call. Reference routing and memory scope
+still come from their existing configuration. AgentSpace limits provider execution
+to 120 seconds or the configured review timeout, whichever is lower. The
+review-wide timeout also applies. `validate` checks the workspace settings
+without creating workspace state or calling the provider.
+
+The [automatic PR workflow](../.github/workflows/pr-review.yml) loads its
+[AgentSpace policy](../.github/harness-review.policy.json) from the trusted
+harness checkout. For a container using `agentWorkspace`, set `directory` to a
+separate local volume writable by the non-root runner. `scan` runs offline
+without opening a workspace.
 
 ## Review skills bank
 

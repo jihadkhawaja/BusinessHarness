@@ -92,6 +92,7 @@ jobs:
           dotnet "$RUNNER_TEMP/businessharness-bin/BusinessHarness.Cli.dll" review \
             --repo "$GITHUB_WORKSPACE/trusted-harness" \
             --base "$HARNESS_BASE" --head "$HARNESS_HEAD" \
+            --config "$GITHUB_WORKSPACE/trusted-harness/.github/harness-review.policy.json" \
             --memory-scope off \
             --output "$RUNNER_TEMP/businessharness-results" --feedback comment
 

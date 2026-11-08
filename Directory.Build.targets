@@ -1,4 +1,19 @@
 <Project>
+  <PropertyGroup>
+    <IsAgentSpaceRuntimeProject Condition="'$(MSBuildProjectName)' == 'AgentSpace.Domain' Or '$(MSBuildProjectName)' == 'AgentSpace.Application' Or '$(MSBuildProjectName)' == 'AgentSpace.Infrastructure'">true</IsAgentSpaceRuntimeProject>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props" Condition="'$(IsAgentSpaceRuntimeProject)' == 'true'" />
+  <PropertyGroup Condition="'$(IsAgentSpaceRuntimeProject)' == 'true'">
+    <NuGetLockFilePath>$(MSBuildThisFileDirectory)locks/$(MSBuildProjectName).packages.lock.json</NuGetLockFilePath>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'AgentSpace.Infrastructure'">
+    <!-- Limit upstream native imports to the OS loader's system paths. -->
+    <AssemblyAttribute Include="System.Runtime.InteropServices.DefaultDllImportSearchPathsAttribute">
+      <_Parameter1>System.Runtime.InteropServices.DllImportSearchPath.System32</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+    </AssemblyAttribute>
+  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props" Condition="'$(MSBuildProjectName)' == 'AgentConnector'" />
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'AgentConnector'">
     <NuGetLockFilePath>$(MSBuildThisFileDirectory)locks/AgentConnector.packages.lock.json</NuGetLockFilePath>

@@ -29,8 +29,17 @@ MAGICore is licensed under Apache License 2.0. Its source and copyright/license 
 
 Source: https://github.com/jihadkhawaja/MAGICore
 
-BusinessHarness builds AgentConnector from the Git submodule at `external/AgentConnector`, pinned to commit `3db84cfbcbff26375bac04f43915136716d3d758`.
+BusinessHarness builds AgentConnector from the Git submodule at `external/AgentConnector`, pinned to commit `7b47d464c1698fddecdc505dfa78373064186253` (v0.1.5).
 
 AgentConnector is licensed under Apache License 2.0. Its source and copyright/license notices are preserved in the submodule. The packaged tool and container include its license at `licenses/AgentConnector/LICENSE`. BusinessHarness uses the provider catalog and request builder, without hosting connector endpoints or enabling its credential store, OAuth runtime, proxies or write actions. Its private Sonar analyzer is centrally pinned; the library uses the .NET and ASP.NET Core shared frameworks.
 
 Source: https://github.com/jihadkhawaja/AgentConnector
+
+BusinessHarness builds the AgentSpace runtime from the Git submodule at
+`external/AgentSpace`, pinned to commit `80c8e83fc38701679fb9cc8c89e80acc52c9eacb`.
+Its three runtime libraries use the .NET base class library and native operating
+system primitives. AgentSpace is licensed under Apache License 2.0. Its source
+and copyright/license notices are preserved in the submodule. The packaged tool,
+desktop app and container include its license at `licenses/AgentSpace/LICENSE`.
+
+[AgentSpace source at the pinned revision](https://github.com/jihadkhawaja/AgentSpace/tree/80c8e83fc38701679fb9cc8c89e80acc52c9eacb)

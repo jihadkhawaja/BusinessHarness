@@ -18,6 +18,7 @@ public sealed record HarnessPolicy
     public List<ReviewSkill> SkillBank { get; init; } = [];
     public List<string> EnabledSkills { get; init; } = [];
     public MemoryPolicy? Memory { get; init; }
+    public AgentWorkspacePolicy? AgentWorkspace { get; init; }
 
     public void Validate()
     {
