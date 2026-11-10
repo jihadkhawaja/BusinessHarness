@@ -14,7 +14,7 @@ COPY README.md LICENSE ./
 RUN dotnet restore src/BusinessHarness.Cli/BusinessHarness.Cli.csproj --locked-mode --configfile NuGet.Config
 RUN dotnet publish src/BusinessHarness.Cli/BusinessHarness.Cli.csproj -c Release --no-restore -o /app --self-contained false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.14@sha256:de0ee358cdd672f7017a003bed21e9ac9ed48a27c922a59b18175b6e82fa7fee AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0.0@sha256:bc0d6653979efba491ab3d6f589d691f96c309c3c3ef81325efa6978e7b7f242 AS runtime
 LABEL org.opencontainers.image.authors="Jihad Khawaja <jihadkhawaja@outlook.com>" \
       org.opencontainers.image.licenses="MIT"
 USER root
