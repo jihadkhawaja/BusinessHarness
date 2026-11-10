@@ -11,7 +11,7 @@
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.9.0" />
     <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.1.0" />
     <PackageVersion Include="System.Numerics.Tensors" Version="10.0.14" />
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.2.0" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Testing.Extensions.Telemetry" Version="2.5.2" />
